@@ -1,0 +1,49 @@
+#!/usr/bin/awk -f
+
+
+BEGIN { 
+#SETTINGS
+	
+	RS = ORS = "\r\n"
+	port = 8089
+	host = "/inet/tcp/" port "/0/0"  # host string 
+
+#END OF SETTINGS
+
+	receive_handshake(header, host)
+	#lets do it
+	# 1) Calculate hash
+	hash = calculate_hash(header["Sec-WebSocket-Key"]);
+	# 2) ????
+	# 3) send an answer
+	answer_handshake(hash, host)
+	printf("\x81\x05\x48\x65\x6c\x6c\x6f") |& host
+#	printf("\x000Hola, motherfucker\x255") |& host	
+
+	close(host)
+} 
+
+function answer_handshake(hash, host){
+	#well, now i need
+	# HTTP/1.1 101 Switching Protocols
+	# Upgrade: websocket
+	# Connection: Upgrade
+	# Sec-WebSocket-Accept: HASH
+	# Sec-WebSocket-Protocol: chat
+	printf ("HTTP/1.1 101 Switching Protocols" ORS "Upgrade: websocket" ORS "Connection: Upgrade" ORS "Sec-WebSocket-Accept: %s" ORS ORS, hash) |& host
+}
+function receive_handshake(headers, host){
+	while(host |& getline str){
+		if (str == "")
+			break
+		match(str, "^([^:]*): (.*)$", tmp)
+		headers[tmp[1]] = tmp[2]
+	}
+}
+
+function calculate_hash(key){
+	magic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+	cmd = sprintf("echo -n '%s' | openssl sha1 -binary | openssl base64", key magic)
+	cmd | getline hash
+	return substr(hash,0, 28)
+}
