@@ -16,13 +16,16 @@ BEGIN {
 	# 2) ????
 	# 3) send an answer
 	answer_handshake(hash, host)
-	RS = ORS = ""
-	frame = dataframe_encode("Hello")
-	#printf "\x81\x05\x48\x65\x6c\x6c\x6f" |& host
-	print frame |& host
+	FS = RS = ORS = ""
+#frame = dataframe_encode("Hello")
+#	print frame |& host
 	frame = dataframe_encode("user")
-	print frame |& host
-#data = dataframe_decode(frame,unmasked)
+	printf frame |& host
+	answer = ""
+	
+	host |& getline answer
+	printf answer
+	data = dataframe_decode(frame,unmasked)
 
 	close(host)
 } 
@@ -50,7 +53,8 @@ function dataframe_encode(payload,    payload_len,bytes,frame){
 #     + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
 #     |                     Payload Data continued ...                |
 #     +---------------------------------------------------------------+
-
+#	81		  84 	    73        e5 		dd        4d 0696 b83f
+#	1000 0001|1000 0100|0111 0011|1110 0101|1101 1101|0100
 	payload_len = length(payload)
 	# final text frame 10000001
 	# omfg hack
@@ -68,7 +72,6 @@ function dataframe_encode(payload,    payload_len,bytes,frame){
 			frame = frame sprintf("%02x", 0)
 		}
 	} else {
-		
 		bytes[1] = payload_len
 		for(i = 1; i < 2; i++){
 			frame = frame chr(bytes[i])
