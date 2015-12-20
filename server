@@ -3,7 +3,6 @@
 
 BEGIN { 
 #SETTINGS
-	
 	RS = ORS = "\r\n"
 	port = 8089
 	host = "/inet/tcp/" port "/0/0"  # host string 
@@ -17,16 +16,22 @@ BEGIN {
 	# 2) ????
 	# 3) send an answer
 	answer_handshake(hash, host)
-	printf(dataframe_encode(bytes, "hello")) |& host
+	frame = dataframe_encode("hello")
+	#printf "\x81\x05\x48\x65\x6c\x6c\x6f" |& host
+	printf frame |& host
+	host |& getline frame
+	data = dataframe_decode(frame)
 
 	close(host)
 } 
 
+function dataframe_decode(frame){
+	
+}
+
 # you must know that client always send masked frames, server always send 
 # unmasked frames
-function dataframe_encode(bytes, payload){
-# 		\x81\x05\x48\x65\x6c\x6c\x6f"
-#		example
+function dataframe_encode(payload){
 #
 #     0                   1                   2                   3
 #      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -48,33 +53,31 @@ function dataframe_encode(bytes, payload){
 #     +---------------------------------------------------------------+
 
 	payload_len = length(payload)
-	split(payload, payload_chars, "")
 	# final text frame 10000001
-	bytes[0] = 0x81
-
+	# omfg hack
+	bytes[0] = sprintf("\x81")
 	#payload length 
 	if(payload_len > 125){
 		bytes[1] = strtonum(sprintf("%2x", 126))
 		bytes[2] = substr(payload_len, 0, 2)
 		bytes[3] = substr(payload_len, 3)
+		for(i = 0; i < 3; i++){
+			frame = frame sprintf("%02x", bytes[i])
+		}
+		# then skip 4 bytes + 4 bytes + 2 bytes = 10 bytes
+		for(i = 0; i < 10; i++){
+			frame = frame sprintf("%02x", 0)
+		}
 	} else {
-		bytes[1] = payload_len + 128
-		bytes[2] = 0x00
-		bytes[3] = 0x00
+		
+		bytes[1] = payload_len
+		for(i = 1; i < 2; i++){
+			frame = frame chr(bytes[i])
+		}
 	}
-	for(i = 0; i < 4; i++){
-		frame = frame sprintf("%02x", bytes[i])
-	}
-	# then skip 4 bytes + 4 bytes + 2 bytes = 10 bytes
-	for(i = 0; i < 10; i++){
-		frame = frame sprintf("%02x", 0)
-	}
-	# and now encode payload
-	printf payload_chars[0]
-	for(i = 1; i < payload_len+1; i++){
-		frame = frame sprintf("%02x", payload_chars[i])
-	}	
-	printf frame	
+
+	frame = bytes[0] frame payload
+	return frame
 }
 
 function answer_handshake(hash, host){
@@ -83,7 +86,6 @@ function answer_handshake(hash, host){
 	# Upgrade: websocket
 	# Connection: Upgrade
 	# Sec-WebSocket-Accept: HASH
-	# Sec-WebSocket-Protocol: chat
 	printf ("HTTP/1.1 101 Switching Protocols" ORS "Upgrade: websocket" ORS "Connection: Upgrade" ORS "Sec-WebSocket-Accept: %s" ORS ORS, hash) |& host
 }
 
@@ -103,12 +105,9 @@ function calculate_hash(key){
 	return substr(hash,0, 28)
 }
 
-function join(array, start, end, sep,    result, i)
+
+function chr(c)
 {
-    if (sep == SUBSEP) # magic value
-       sep = ""
-    result = array[start]
-    for (i = start + 1; i <= end; i++)
-        result = result sep array[i]
-    return result
+    # force c to be numeric by adding 0
+    return sprintf("%c", c + 0)
 }
