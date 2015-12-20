@@ -1,9 +1,0 @@
-<script>
-document.onload = function(){
-	var ws = new WebSocket('ws://helios.cs.ifmo.ru:18991/');
-
-	ws.onmessage = function(event) {
-		  console.log('Count is: ' + event.data);
-	};
-}
-</script>
