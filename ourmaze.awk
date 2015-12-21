@@ -1,6 +1,5 @@
 BEGIN {
 	system("gcc -ansi -pedantic -o lock lock.c");
-	amountUsers = 0;
 
 	OFS = "";
 	OUT = "maze";
@@ -19,7 +18,7 @@ BEGIN {
 function newThread() {
 #getPort
 	clientPort = 100;
-	system("gawk -f thread.awk "clientPort);
+	system("gawk -f thread.awk "clientPort" &");
 }
 
 function generate(   i) {

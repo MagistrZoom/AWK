@@ -2,6 +2,13 @@ BEGIN {
 	amountUsers = 0;
 
 	STARTHP = 100;
+	MAXHP = 150;
+
+	DRAND = 10;
+	DAMAGE = 10;
+	DTRAPS = 20;
+	HEAL = 25;
+
 	clientPort = ARGV[1];
 
 	OFS = "";
@@ -19,7 +26,7 @@ BEGIN {
 	start();
 }
 
-function start() {
+function start( i) {
 	loadMaze();
 	addUser(ID);
 
@@ -53,6 +60,7 @@ function updateInf(  i,j) {
 			users[amountUsers][j] = 0;
 		}
 		split(i, users[amountUsers], " ");
+		if (users[amountUsers][3] == ID) thisUser = amountUsers;
 		amountUsers++;
 	}
 
@@ -78,11 +86,11 @@ function writeUsers(  i) {
 	close(DATA);
 }
 
-function deleteUser(ID, x,list) {
+function deleteUser(id, x,list) {
 	lock();
 	getline list < DATA;
 	while(getline x < DATA > 0) {
-		if(!match(x,".+ .+ "ID"\\>"))
+		if(!match(x,".+ .+ "id"\\>"))
 			list = list"\n"x;
 	}
 	print(list) > DATA;
@@ -90,17 +98,8 @@ function deleteUser(ID, x,list) {
 	unlock();
 }
 
-#!update+lock!!!
-function replaceMod(cell, newCell,list) {
-	newCell = getFreeCell();
-
-	getline list < DATA;
-	while(getline x < DATA > 0) {
-		if(!match(x,cell))
-			list = list"\n"x;
-	}
-	print(list) > DATA;
-	close(DATA);
+function replaceMod(mod, i) {
+	mods[mod] = getFreeCell();
 }
 
 function randCell() {
@@ -130,6 +129,75 @@ function getFreeCell( r,rep,i) {
 	return r;
 }
 
+function goRight( newCell) {
+	newCell = users[thisUser][1] + 1;
+	if(!rightBound[users[thisUser][1]])
+		goToCell(newCell);
+}
+
+function goLeft( newCell) {
+	if((users[thisUser][1] % sizeX)&&(!rightBound[users[thisUser][1] - 1]))
+	newCell = users[thisUser][1] - 1;
+		goToCell(newCell);
+}
+
+function goUp( newCell) {
+	newCell = users[thisUser][1] - sizeX;
+	if((newCell >= 0) && (!bottomBound[newCell])) goToCell();
+		goToCell(newCell);
+}
+
+function goDown( newCell) {
+	newCell = users[thisUser][1] + sizeX;
+	if(!bottomBound[newCell])
+		goToCell(newCell);
+}
+
+function goToCell(cell, i) {
+	for(i = 0; i < amountFruits + amountTraps; i++) {
+		if(mods[i] == cell) {
+			if(i < amountFruits) {
+				users[thisUser][2] += HEAL;
+				if(users[thisUser][2] >= MAXHP) {
+					users[thisUser][2] = MAXHP;
+				}
+			} else {
+				users[thisUser][2] -= int(DTRAPS + DRAND * rand());
+				if(users[thisUser][2] <= 0) {
+					dead(thisUser);
+					mods[i] = getFreeCell();
+					return;
+				}
+			}
+			
+			users[thisUser][1] = cell;
+			mods[i] = getFreeCell();
+			return;
+		}
+	}
+
+	for(i = 0; i < amountUsers; i++) {
+		if(users[i][1] == cell) {
+			attack(i);
+			return;
+		}
+	}
+
+	users[thisUser][1] = cell;
+}
+
+function attack( user) {
+	users[user][2] -= int(DAMAGE + DRAND * rand());
+	if(users[user][2] <= 0) {
+		dead(user);
+	}
+}
+
+function dead( user) {
+	users[user][1] = getFreeCell();
+	users[user][2] = STARTHP;
+}
+
 function loadMaze( x,y,i,bounds) {
 	getline x < MAZE;
 	y[1] = 0; y[2] = 0;
@@ -144,8 +212,6 @@ function loadMaze( x,y,i,bounds) {
 		if(bounds >= 2) bottomBound[i]++;
 		if((bounds == 3)||(bounds == 1)) rightBound[i]++;
 	}
-	print bottomBound[0]; print rightBound[0];
-	print bottomBound[1599]; print rightBound[1599];
 }
 
 function lock( input) {
