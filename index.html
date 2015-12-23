@@ -1,6 +1,6 @@
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-	var ws = new WebSocket('ws://localhost:8089/');
+	var ws = new WebSocket('ws://localhost:16123/');
 
 	ws.onmessage = function(event) {
 		  console.log('Count is: ' + event.data);
