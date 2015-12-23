@@ -1,10 +1,10 @@
-#!/usr/bin/awk -f
+#!/usr/bin/gawk -f
 
 
 BEGIN { 
-#SETTINGS
+#SЕTTINGS
 	RS = ORS = "\r\n"
-	port = 8089
+	port = 16123
 	host = "/inet/tcp/" port "/0/0"  # host string 
 
 #END OF SETTINGS
@@ -16,15 +16,22 @@ BEGIN {
 	# 2) ????
 	# 3) send an answer
 	answer_handshake(hash, host)
-	FS = RS = ORS = ""
+	FS = RS = ""
 #frame = dataframe_encode("Hello")
 #	print frame |& host
+
 	frame = dataframe_encode("user")
 	printf frame |& host
+
+
 	answer = ""
-	
-	host |& getline answer
-	printf answer
+
+	PROCINFO[host, "READ_TIMEOUT"] = 10000
+	if((host |& getline) > 0)
+		print $0
+	else 
+		print ERRNO
+
 	data = dataframe_decode(frame,unmasked)
 
 	close(host)
@@ -117,7 +124,7 @@ function answer_handshake(hash, host){
 	# Upgrade: websocket
 	# Connection: Upgrade
 	# Sec-WebSocket-Accept: HASH
-		printf ("HTTP/1.1 101 Switching Protocols" ORS "Upgrade: websocket" ORS "Connection: Upgrade" ORS "Sec-WebSocket-Accept: %s" ORS ORS, hash) |& host
+		printf ("HTTP/1.1 101 Switching Protocols" ORS "Upgrade: websocket" ORS "Connection: Upgrade" ORS "Sec-WebSocket-Accept: %s" ORS "Sec-WebSocket-Protocol: chat"ORS ORS, hash) |& host
 }
 
 function receive_handshake(headers, host){
