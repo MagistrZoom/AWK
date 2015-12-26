@@ -1,12 +1,10 @@
-#!/usr/bin/awk -f
-
-BEGIN {
-
-}
+#!/home/izoomka/wrk/2grade/unix/gawk/gawk -f
 
 END { 
 
 #SЕTTINGS
+	PROCINFO[host, "RETRY"] = 1
+	PROCINFO[host, "NONFATAL"] = 1
 	_RS = RS
 	RS = ORS = "\r\n"
 	port = 16123
@@ -27,9 +25,10 @@ END {
 
 	RS = ""
 	PROCINFO[host, "READ_TIMEOUT"] = 1000
-	if(host |& getline hey) {
-		printf hey
+	while((host |& getline aframe) > 0){
+		printf aframe
 	}
+	
 
 #	cmd = sprintf("echo -n %s | xxd", aframe)
 #	cmd | getline hex
@@ -126,7 +125,7 @@ function answer_handshake(hash, host){
 	# Upgrade: websocket
 	# Connection: Upgrade
 	# Sec-WebSocket-Accept: HASH
-		printf ("HTTP/1.1 101 Switching Protocols" ORS "Upgrade: websocket" ORS "Connection: Upgrade" ORS "Sec-WebSocket-Accept: %s" ORS "Sec-WebSocket-Protocol: chat"ORS ORS, hash) |& host
+	printf ("HTTP/1.1 101 Switching Protocols" ORS "Upgrade: websocket" ORS "Connection: Upgrade" ORS "Sec-WebSocket-Accept: %s" ORS ORS, hash) |& host
 }
 
 function receive_handshake(headers, host){
@@ -138,10 +137,13 @@ function receive_handshake(headers, host){
 	}
 }
 
-function calculate_hash(key,    magic,cmd,hash){
+function calculate_hash(key,    magic,cmd,hash,_ORS){
+	_ORS = ORS
+	ORS = "\n"
 	magic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 	cmd = sprintf("echo -n '%s' | openssl sha1 -binary | openssl base64", key magic)
 	cmd | getline hash
+	ORS = _ORS
 	return substr(hash,0, 28)
 }
 
