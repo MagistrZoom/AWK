@@ -116,10 +116,6 @@ function data_to_json( port, filename ) {
    
    template_others = "\"other\":{\"ID\":%d,\"pos\":%d,\"health\":%d}";
 
-   # trap_counts / trap_pos
-   # heal_couns / heal_pos
-
-   # lines with information about items
    heal_count = 0; heal_pos = "";
    trap_count = 0; trap_pos = "";
    user = ""; others = "";
@@ -139,7 +135,6 @@ function data_to_json( port, filename ) {
       }
       else if( count == offset ) {
          trap_count = int(line);         
-#         offset += trap_counts;
          for( i=0; i < trap_count; i++) {
             getline line < filename;
             trap_pos = line RT "," RT trap_pos;
@@ -173,4 +168,30 @@ function data_to_json( port, filename ) {
       
       FS = old_delim;
       return result; 
+}
+
+# From clients server gets the information about users' movements. 
+#
+#  
+#  JS-object
+#     var state  = {
+#        movement : <MOVE>  
+#     }
+#  
+#  JSON-object
+#     {
+#        "state" : {         
+#           "movement" : <MOVE>
+#        }
+#     }
+#
+#     MOVE : [ 0, 1, 2, 3]
+#       --  0 - up
+#       --  1 - right
+#       --  2 - down 
+#       --  3 - left
+
+function from_json( json ) {
+   gsub( /[^0-9]+/, "", json);
+   return json;
 }
