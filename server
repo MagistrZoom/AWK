@@ -1,8 +1,9 @@
-#!/usr/bin/gawk -f
+#!/usr/bin/awk -f
 
 
-BEGIN { 
+END { 
 #SЕTTINGS
+	_RS = RS
 	RS = ORS = "\r\n"
 	port = 16123
 	host = "/inet/tcp/" port "/0/0"  # host string 
@@ -16,23 +17,18 @@ BEGIN {
 	# 2) ????
 	# 3) send an answer
 	answer_handshake(hash, host)
-	FS = RS = ""
-#frame = dataframe_encode("Hello")
-#	print frame |& host
 
 	frame = dataframe_encode("user")
 	printf frame |& host
 
 
-	answer = ""
-
-	PROCINFO[host, "READ_TIMEOUT"] = 10000
-	if((host |& getline) > 0)
-		print $0
-	else 
-		print ERRNO
-
-	data = dataframe_decode(frame,unmasked)
+	aframe = ""
+	PROCINFO[host, "READ_TIMEOUT"] = 1000
+	while((host |& getline aframe) > 0){
+		print "fail"
+		print aframe
+	}
+	data = dataframe_decode(aframe,unmasked)
 
 	close(host)
 } 
@@ -113,8 +109,8 @@ function dataframe_decode(frame,unmasked){
 	
 	# recognize frame type
 	# first byte fin+3byte reserved + opcode
-	printf("echo -n ibase=10;obase=2;%d | bc", bytes[0]) |& getline first_byte 	
-	printf("%x", first_byte)
+#	printf("echo -n ibase=10;obase=2;%d | bc", bytes[0]) |& getline first_byte 	
+	printf("%s", frame)
 		
 }
 
