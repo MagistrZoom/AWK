@@ -1,7 +1,11 @@
 #!/usr/bin/awk -f
 
+BEGIN {
+
+}
 
 END { 
+
 #SЕTTINGS
 	_RS = RS
 	RS = ORS = "\r\n"
@@ -21,14 +25,16 @@ END {
 	frame = dataframe_encode("user")
 	printf frame |& host
 
-
-	aframe = ""
+	RS = ""
 	PROCINFO[host, "READ_TIMEOUT"] = 1000
-	while((host |& getline aframe) > 0){
-		print "fail"
-		print aframe
+	if(host |& getline hey) {
+		printf hey
 	}
-	data = dataframe_decode(aframe,unmasked)
+
+#	cmd = sprintf("echo -n %s | xxd", aframe)
+#	cmd | getline hex
+#	print hex
+#	data = dataframe_decode(aframe,unmasked)
 
 	close(host)
 } 
