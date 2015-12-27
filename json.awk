@@ -6,12 +6,6 @@
 #          width  : <VALUE>,
 #          heigth : <VALUE>
 #       },
-#       -- borders: {
-#       --   empty:   0,
-#       --   rigth:   1,
-#       --   bottom:  2,
-#       --   both:    3,
-#       },
 #       area : [ <ARRAY> ]
 #    }; 
 # 
@@ -60,10 +54,10 @@
 #          "pos"      : <CELL>,
 #       },
 #       "itmes" : {
-#          "trap" : {
+#          "traps" : {
 #                "pos" : [ <ARRAY> ]
 #          },
-#          "heal" : { 
+#          "heals" : { 
 #                "pos" : [ <ARRAY> ]
 #          }
 #       },
@@ -102,7 +96,7 @@ function data_to_json( port, filename ) {
    old_delim = FS;
    FS = " ";
    template_user = "{\"user\":{\"ID\":%d,\"health\":%d,\"pos\":%d},"
-   template_items = "\"items\":{\"traps\":{\"pos\":[%s]},\"heal\":{\"pos\":[%s]},";
+   template_items = "\"items\":{\"traps\":{\"pos\":[%s]},\"heals\":{\"pos\":[%s]},";
    template_others = "\"other\":{\"pos\":[%s]}";
 
    heal_count = 0; heal_pos = "";
