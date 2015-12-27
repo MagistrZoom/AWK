@@ -145,7 +145,7 @@ function data_to_json( port, filename ) {
       }
       # If there is only one user at the time.
       if( others == "") {
-         others = sprintf(template_others, 0);
+         others = sprintf(template_others, -1);
       }
       items  = sprintf( template_items, trap_pos, heal_pos);
       others = sprintf( template_others, others); 
