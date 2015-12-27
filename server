@@ -1,15 +1,16 @@
-#!/home/izoomka/wrk/2grade/unix/gawk/gawk -f
+#!/home/s191941/bin/gawk -f
 
 END { 
-
 #SЕTTINGS
-	PROCINFO[host, "RETRY"] = 1
-	PROCINFO[host, "NONFATAL"] = 1
+
 	_RS = RS
 	RS = ORS = "\r\n"
 	port = 16123
 	host = "/inet/tcp/" port "/0/0"  # host string 
 
+	PROCINFO[host, "RETRY"] = 1
+	PROCINFO[host, "NONFATAL"] = 1
+	PROCINFO[host, "READ_TIMEOUT"] = 1000
 #END OF SETTINGS
 
 	receive_handshake(header, host)
@@ -18,22 +19,19 @@ END {
 	hash = calculate_hash(header["Sec-WebSocket-Key"]);
 	# 2) ????
 	# 3) send an answer
-	answer_handshake(hash, host)
+	answer_handshake(header, hash, host)
 
 	frame = dataframe_encode("user")
 	printf frame |& host
 
 	RS = ""
-	PROCINFO[host, "READ_TIMEOUT"] = 1000
+	aframe = ""
 	while((host |& getline aframe) > 0){
 		printf aframe
 	}
 	
 
-#	cmd = sprintf("echo -n %s | xxd", aframe)
-#	cmd | getline hex
-#	print hex
-#	data = dataframe_decode(aframe,unmasked)
+	data = dataframe_decode(aframe,unmasked)
 
 	close(host)
 } 
@@ -90,7 +88,7 @@ function dataframe_encode(payload,    payload_len,bytes,frame){
 	return frame
 }
 
-function dataframe_decode(frame,unmasked){
+function dataframe_decode(aframe,unmasked){
 #
 #     0                   1                   2                   3
 #      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -110,25 +108,28 @@ function dataframe_decode(frame,unmasked){
 #     + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
 #     |                     Payload Data continued ...                |
 #     +---------------------------------------------------------------+
-	split(frame, bytes, "")
+	split(aframe, bytes, "")
 	
 	# recognize frame type
 	# first byte fin+3byte reserved + opcode
-#	printf("echo -n ibase=10;obase=2;%d | bc", bytes[0]) |& getline first_byte 	
-	printf("%s", frame)
+	print aframe;
+	cmd = sprintf("printf '%s' | xxd -b", bytes[1])
+	cmd | getline first_byte 	
+	print first_byte;
+#	printf("%s\n", aframe)
 		
 }
 
-function answer_handshake(hash, host){
+function answer_handshake(header, hash, host){
 	#well, now i need
 	# HTTP/1.1 101 Switching Protocols
 	# Upgrade: websocket
 	# Connection: Upgrade
 	# Sec-WebSocket-Accept: HASH
-	printf ("HTTP/1.1 101 Switching Protocols" ORS "Upgrade: websocket" ORS "Connection: Upgrade" ORS "Sec-WebSocket-Accept: %s" ORS ORS, hash) |& host
+	printf ("HTTP/1.1 101 Switching Protocols" ORS "Upgrade: websocket" ORS "Connection: %s" ORS "Sec-WebSocket-Accept: %s" ORS ORS, header["Connection"], hash) |& host
 }
 
-function receive_handshake(headers, host){
+function receive_handshake(headers, host,      str,tmp){
 	while(host |& getline str){
 		if (str == "")
 			break
@@ -138,12 +139,9 @@ function receive_handshake(headers, host){
 }
 
 function calculate_hash(key,    magic,cmd,hash,_ORS){
-	_ORS = ORS
-	ORS = "\n"
 	magic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-	cmd = sprintf("echo -n '%s' | openssl sha1 -binary | openssl base64", key magic)
+	cmd = sprintf("printf '%s' | openssl sha1 -binary | openssl base64", key magic)
 	cmd | getline hash
-	ORS = _ORS
 	return substr(hash,0, 28)
 }
 

@@ -1,0 +1,8 @@
+#!/usr/bin/bash
+
+cmd="$(:|./server)"
+IFS='\n' read -r -a lines <<< "$cmd"
+
+echo $cmd
+echo ${lines[0]}
+echo ${lines[1]}
