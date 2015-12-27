@@ -21,12 +21,6 @@
 #          "width"  : <VALUE>,
 #          "heigth" : <VALUE>
 #       },
-#       -- "borders" : {
-#       --  "empty"  : "0",
-#       --  "rigth"  : "1",
-#       --  "bottom" : "2",
-#       --  "both"   : "3"
-#       -- },
 #       "area" : [ <ARRAY> ]
 #    }
 #   
@@ -54,9 +48,7 @@
 #          }
 #       }
 #       other : {
-#          ID     : <ID> 
-#          health : <HP>
-#          pos    : <CELL>      
+#          pos    : [ <ARRAY> ]      
 #       }
 #    };
 # 
@@ -76,9 +68,7 @@
 #          }
 #       },
 #       "other" : {
-#          "ID"       : <ID>,
-#          "health"   : <HP>
-#          "pos"      : <CELL>
+#          "pos"      :  [ <ARRAY> ]
 #       }
 #    }
 # 
@@ -113,8 +103,7 @@ function data_to_json( port, filename ) {
    FS = " ";
    template_user = "{\"user\":{\"ID\":%d,\"health\":%d,\"pos\":%d},"
    template_items = "\"items\":{\"traps\":{\"pos\":[%s]},\"heal\":{\"pos\":[%s]},";
-   
-   template_others = "\"other\":{\"ID\":%d,\"pos\":%d,\"health\":%d}";
+   template_others = "\"other\":{\"pos\":[%s]}";
 
    heal_count = 0; heal_pos = "";
    trap_count = 0; trap_pos = "";
@@ -148,11 +137,13 @@ function data_to_json( port, filename ) {
             user = sprintf( template_user, $3, $2, $1 );
          }
          else {
-               others = sprintf(template_others,$3,$2,$1) RT "," others;   
+               others = $2 "," others;   
             }
             count++;
          }
       }
+      gsub(/,$/,"",others);
+
       # This condition correspond to the error:
       # either user's port is incocrrect or my algorithm failed. 
       if( user == "" ) {
@@ -160,12 +151,12 @@ function data_to_json( port, filename ) {
       }
       # If there is only one user at the time.
       if( others == "") {
-         others = sprintf(template_others, 0, 0, 0);
+         others = sprintf(template_others, 0);
       }
-      items = sprintf( template_items, trap_pos, heal_pos);
+      items  = sprintf( template_items, trap_pos, heal_pos);
+      others = sprintf( template_others, others); 
       result = user RT items RT others RT "}"; 
       gsub(/\n/,"",result);
-      
       FS = old_delim;
       return result; 
 }
