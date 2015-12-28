@@ -1,0 +1,56 @@
+body {
+   background-color: black;
+   color           : #0000FF;
+}
+pre {
+   margin  : 1px; 
+}
+.header {
+   color : #DF01D7;
+   font-size: 110%;
+}
+.map {
+   color : #0000FF;
+   font-size: 95%;
+}
+
+.traps {
+   color : white;
+}
+.heals {
+   color : green;
+}
+.others {
+   color : red;
+}
+.user {
+   color : yellow;
+}
+
+
+.title {
+   color : red;
+   text-align: center;
+   font-size: 150%;
+}
+
+a:link {
+    color: red;
+    background-color: transparent;
+    text-decoration: none;
+}
+a:visited {
+    color: red;
+    background-color: transparent;
+    text-decoration: none;
+}
+a:hover {
+    color: red;
+    background-color: transparent;
+    text-decoration: none;
+}
+a:active {
+    color: red;
+    background-color: transparent;
+    text-decoration: none;
+}
