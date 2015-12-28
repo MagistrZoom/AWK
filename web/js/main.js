@@ -19,7 +19,10 @@ function pageHeader( user ) {
   var html = document.getElementById("header");
   var str = html.innerHTML;
   var userName = (function getRandomName( ) {
-            var names = [ "Asgaroth", "Gabriel", "Lilith",   "Ishtar", "Hel",      "Abaddon" ];
+            var names = [ "Asgaroth", "Gabriel", 
+                          "Lilith",   "Ishtar", 
+                          "Hel",      "Abaddon" 
+                        ];
             return names[Math.floor(Math.random()*(names.length))];
   })();
 
