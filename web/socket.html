@@ -1,0 +1,12 @@
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+	var ws = new WebSocket('ws://localhost:8089/');
+
+	ws.onmessage = function(event) {
+		  console.log('Count is: ' + event.data);
+		  console.log("Answer sent");
+		  ws.send("Hola");
+		  ws.send("hola");
+	};
+});
+</script>
