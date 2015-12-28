@@ -159,15 +159,11 @@ function data_to_json( port, filename ) {
 #
 #  
 #  JS-object
-#     var state  = {
-#        movement : <MOVE>  
-#     }
+#        var movement = <MOVE>  
 #  
 #  JSON-object
 #     {
-#        "state" : {         
 #           "movement" : <MOVE>
-#        }
 #     }
 #
 #     MOVE : [ 0, 1, 2, 3]
