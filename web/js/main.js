@@ -113,10 +113,10 @@ function pageBody( map, mobs ) {
          else if( tmp == 31){ str1="W#";str2=" #";}
          else if( tmp == 32){ str1="W ";str2="##";}
          else if( tmp == 33){ str1="W#";str2="##";}
-         else if( tmp == 40){ str1="@ ";str2="  "; console.log(i, j);}
-         else if( tmp == 41){ str1="@#";str2=" #"; console.log(i, j);}
-         else if( tmp == 42){ str1="@ ";str2="##"; console.log(i, j);}
-         else if( tmp == 43){ str1="@#";str2="##"; console.log(i, j);}
+         else if( tmp == 40){ str1="@ ";str2="  ";}
+         else if( tmp == 41){ str1="@#";str2=" #";}
+         else if( tmp == 42){ str1="@ ";str2="##";}
+         else if( tmp == 43){ str1="@#";str2="##";}
          else { throw new Error();}
          tmp_str1 += str1;
          tmp_str2 += str2;
