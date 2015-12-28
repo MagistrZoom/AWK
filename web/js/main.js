@@ -18,23 +18,22 @@ function addEvents() {
 function pageHeader( user ) {
   var html = document.getElementById("header");
   var str = html.innerHTML;
-  var userName = getRandomName( );
+  var userName = (function getRandomName( ) {
+            var names = [ "Asgaroth", "Gabriel", "Lilith",   "Ishtar", "Hel",      "Abaddon" ];
+            return names[Math.floor(Math.random()*(names.length))];
+  })();
+
   var userHP   = user.health;
   var newHTML  = str.replace(/@/, userName );
 
-  newHTML  = newHTML.replace(/\+/, function(match){ 
-                     var hp= "o"; 
-                     for(i=0;i<userHP-1;i++){
-                        hp += "o";      
-                     }
-                     return hp;
-                  });
+  newHTML = newHTML.replace(/\+/, function(match){ 
+            var hp= "o"; 
+            for( i = 0 ; i < userHP-1 ; i++ ) hp += "o";      
+         return hp;
+  });
   html.innerHTML = newHTML;
 }
-function getRandomName( ) {
-      var names = [ "Asgaroth", "Gabriel", "Lilith", "Ishtar", "Hel", "Abaddon" ];
-   return names[Math.floor(Math.random()*(names.length))];
-}
+
 
 /*
  * Codes :
@@ -56,11 +55,6 @@ function getRandomName( ) {
  */
 
 function pageBody( map, mobs ) {
-  var line = function getLine( num ) {
-                  var str = "";
-                  for( i = 0; i < num; i++){ str += "#"; }
-                  return str + "#\n";
-              };
 
   var width       = map.parameters.width;
   var height      = map.parameters.height;
@@ -82,7 +76,12 @@ function pageBody( map, mobs ) {
   else                       { hb = ph-BLOCKH*Math.floor(ph/BLOCKH); he = hb + BLOCKH-1;}
 
 
-  var area_string = line( BLOCKW*2 );
+  var area_string = ( function getLine() {
+                  var str = "";
+                  for( i = 0; i < BLOCKW*2; i++){ str += "#"; }
+                  return str + "#\n";
+  })();
+
   for( i = 0, len = area_array.length; i < len; i++) {
      if( i < mobs.items.heals.pos.length) { area_array[mobs.items.heals.pos[i]] += 10;}
      if( i < mobs.items.traps.pos.length) { area_array[mobs.items.traps.pos[i]] += 20;}
