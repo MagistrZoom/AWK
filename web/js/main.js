@@ -1,37 +1,25 @@
-/*
- *  Events. 
- *
- */
 function addEvents() {
    document.addEventListener( 'keydown', function(event) {
+      var movement;
       switch( event.keyCode ) {
-         case  38 : pressed_up(); break;
-         case  37 : pressed_left(); break;
-         case  39 : pressed_right(); break;
-         case  40 : pressed_down(); break;
+         case  38 : movement = 0; break;
+         case  39 : movement = 1; break;
+         case  40 : movement = 2; break;
+         case  37 : movement = 3; break;
        }
+   //   send( JSON.stringify(movement));
    });
-}
-
-function pressed_right () {
-}
-function pressed_left() {
-}
-function pressed_up() {
-}
-function pressed_down() {
 }
 
 /*
  *  UI
- *
  */
 
 function pageHeader( user ) {
   var html = document.getElementById("header");
   var str = html.innerHTML;
   var userName = getRandomName( );
-  var userHP   = getUserHP( user );
+  var userHP   = user.health;
   var newHTML  = str.replace(/@/, userName );
 
   newHTML  = newHTML.replace(/\+/, function(match){ 
@@ -44,11 +32,10 @@ function pageHeader( user ) {
   html.innerHTML = newHTML;
 }
 function getRandomName( ) {
-   return "Asgaroth";
+      var names = [ "Asgaroth", "Gabriel", "Lilith", "Ishtar", "Hel", "Abaddon" ];
+   return names[Math.floor(Math.random()*(names.length))];
 }
-function getUserHP( user ) {
-   return user.health;
-}
+
 /*
  * Codes :
  *    0 -- empty cell    "  "
@@ -75,8 +62,8 @@ function pageBody( map, mobs ) {
                   return str + "#\n";
               };
 
-  var width  = map.parameters.width;
-  var height = map.parameters.height;
+  var width       = map.parameters.width;
+  var height      = map.parameters.height;
   var user        = mobs.user.pos; // scalar  
   var area_array  = map.area;
   var wb, we, hb, he;  
@@ -96,7 +83,7 @@ function pageBody( map, mobs ) {
 
 
   var area_string = line( BLOCKW*2 );
-  for( i = 0; i < area_array.length; i++) {
+  for( i = 0, len = area_array.length; i < len; i++) {
      if( i < mobs.items.heals.pos.length) { area_array[mobs.items.heals.pos[i]] += 10;}
      if( i < mobs.items.traps.pos.length) { area_array[mobs.items.traps.pos[i]] += 20;}
      if( i < mobs.others.pos.length)      { area_array[mobs.others.pos[i]] += 30; }
@@ -150,7 +137,7 @@ function printErrorPage( ) {
 }
 
 
-/* C-style? */
+/* C-style? Bad? (Yup.)*/
 function init_frames( ) {
    try{
       var map  = getMap();
@@ -164,7 +151,6 @@ function init_frames( ) {
       printErrorPage();
    }
 }
-
 
 /*
  *  Test functions. 
