@@ -1,153 +1,114 @@
-#!/home/s191941/bin/gawk -f
+#!/usr/bin/gawk -f
 
 END { 
 #SЕTTINGS
 
 	_RS = RS
 	RS = ORS = "\r\n"
-	port = 16123
+	port = 1488
 	host = "/inet/tcp/" port "/0/0"  # host string 
 
-	PROCINFO[host, "RETRY"] = 1
-	PROCINFO[host, "NONFATAL"] = 1
-	PROCINFO[host, "READ_TIMEOUT"] = 1000
 #END OF SETTINGS
+	while(1){
+		receive_http(headers, host)
+		if(headers["GET"] != ""){	
+			content = read_if_exist(host,headers["GET"],err)
+			if(err[1] == 1){
+				print "HTTP/1.1 404 Not Found" |& host
+				close (host)
+				continue
+#	terminate(host, 2, "Invalid filename")
+			}	
+		}
+		if(headers["POST"] != ""){
+			content = ajax(host,err)	
+			if(err[1] == 1){
+				print "HTTP/1.1 404 Not Found" |& host
+				close (host)
+				continue
+#	terminate(host, 2, "Invalid filename")
+			}	
+		}
+		content_length = length(content)
+		answer_headers = make_a_headers(content_length)	
+		print answer_headers ORS content |& host
 
-	receive_handshake(header, host)
-	#lets do it
-	# 1) Calculate hash
-	hash = calculate_hash(header["Sec-WebSocket-Key"]);
-	# 2) ????
-	# 3) send an answer
-	answer_handshake(header, hash, host)
-
-	frame = dataframe_encode("user")
-	printf frame |& host
-
-	RS = ""
-	aframe = ""
-	while((host |& getline aframe) > 0){
-		printf aframe
+		close(host)
 	}
-	
-
-	data = dataframe_decode(aframe,unmasked)
-
-	close(host)
+	terminate(host, 3, "Lyl, how?")
 } 
 
-
-# you must know that client always send masked frames, server always send 
-# unmasked frames
-function dataframe_encode(payload,    payload_len,bytes,frame){
-#
-#     0                   1                   2                   3
-#      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-#     +-+-+-+-+-------+-+-------------+-------------------------------+
-#     |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
-#     |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
-#     |N|V|V|V|       |S|             |   (if payload len==126/127)   |
-#     | |1|2|3|       |K|             |                               |
-#     +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
-#     |     Extended payload length continued, if payload len == 127  |
-#     + - - - - - - - - - - - - - - - +-------------------------------+
-#     |                               |Masking-key, if MASK set to 1  |
-#     +-------------------------------+-------------------------------+
-#     | Masking-key (continued)       |          Payload Data         |
-#     +-------------------------------- - - - - - - - - - - - - - - - +
-#     :                     Payload Data continued ...                :
-#     + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
-#     |                     Payload Data continued ...                |
-#     +---------------------------------------------------------------+
-#	81		  84 	    73        e5 		dd        4d 0696 b83f
-#	1000 0001|1000 0100|0111 0011|1110 0101|1101 1101|0100
-	payload_len = length(payload)
-	# final text frame 10000001
-	# omfg hack
-	bytes[0] = sprintf("\x81")
-	#payload length 
-	if(payload_len > 125){
-		bytes[1] = strtonum(sprintf("%2x", 126))
-		bytes[2] = substr(payload_len, 0, 2)
-		bytes[3] = substr(payload_len, 3)
-		for(i = 0; i < 3; i++){
-			frame = frame sprintf("%02x", bytes[i])
-		}
-		# then skip 4 bytes + 4 bytes + 2 bytes = 10 bytes
-		for(i = 0; i < 10; i++){
-			frame = frame sprintf("%02x", 0)
-		}
-	} else {
-		bytes[1] = payload_len
-		for(i = 1; i < 2; i++){
-			frame = frame chr(bytes[i])
-		}
-	}
-
-	frame = bytes[0] frame payload
-	return frame
+function make_a_headers(content_length,    headers){
+	headers = "HTTP/1.1 200 OK" ORS
+	headers = headers "Server: gawk-based sh~ made by izoomko" ORS
+	headers = headers "Content-length" content_length
+	headers = headers "Connection: Keep-Alive" ORS
+	"Content-Type: text/html" ORS
+	"Content-Language: en" ORS
 }
 
-function dataframe_decode(aframe,unmasked){
-#
-#     0                   1                   2                   3
-#      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-#     +-+-+-+-+-------+-+-------------+-------------------------------+
-#     |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
-#     |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
-#     |N|V|V|V|       |S|             |   (if payload len==126/127)   |
-#     | |1|2|3|       |K|             |                               |
-#     +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
-#     |     Extended payload length continued, if payload len == 127  |
-#     + - - - - - - - - - - - - - - - +-------------------------------+
-#     |                               |Masking-key, if MASK set to 1  |
-#     +-------------------------------+-------------------------------+
-#     | Masking-key (continued)       |          Payload Data         |
-#     +-------------------------------- - - - - - - - - - - - - - - - +
-#     :                     Payload Data continued ...                :
-#     + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
-#     |                     Payload Data continued ...                |
-#     +---------------------------------------------------------------+
-	split(aframe, bytes, "")
+function read_if_exist(host,request,err,    ls_out,_RS,tmp,matches){
+	_RS = RS
+	RS = "\n"
 	
-	# recognize frame type
-	# first byte fin+3byte reserved + opcode
-	print aframe;
-	cmd = sprintf("printf '%s' | xxd -b", bytes[1])
-	cmd | getline first_byte 	
-	print first_byte;
-#	printf("%s\n", aframe)
-		
+	# goto :hell, scriptkiddy!
+	matches = match(request, "../")
+	
+	if(matches != 0){
+		RS = _RS
+		err = 1
+		return ""
+	}
+	
+	tmp = sprintf("ls %s 2>/dev/null || echo $?", request) 
+	tmp | getline ls_out
+	if(ls_out == "2"){
+		err[1] = 1
+		RS = _RS
+		return ""
+	}
+	
+
+	RS = "^$"
+	getline tmp < request
+	RS = _RS
+	return tmp
 }
 
-function answer_handshake(header, hash, host){
-	#well, now i need
-	# HTTP/1.1 101 Switching Protocols
-	# Upgrade: websocket
-	# Connection: Upgrade
-	# Sec-WebSocket-Accept: HASH
-	printf ("HTTP/1.1 101 Switching Protocols" ORS "Upgrade: websocket" ORS "Connection: %s" ORS "Sec-WebSocket-Accept: %s" ORS ORS, header["Connection"], hash) |& host
+function ajax(host,err,       received){
+	received = receive_content(host)
+	print received
+	return received
 }
-
-function receive_handshake(headers, host,      str,tmp){
+function receive_http(headers, host,      str,tmp,matches){
 	while(host |& getline str){
 		if (str == "")
 			break
-		match(str, "^([^:]*): (.*)$", tmp)
+		matches	= match(str, "^([^:]*): (.*)$", tmp)
+		if(matches == 0){
+			matches =	match(str, "^([^ ]*) /([^ ]*) HTTP/1.1$", tmp)
+			if(tmp[2] == "")
+				tmp[2] = "index.html"
+			if(matches == 0){
+				terminate(host, 1, "Wth, dude? Where is your's valid HTTP heads?");
+			}
+		}
 		headers[tmp[1]] = tmp[2]
 	}
 }
 
-function calculate_hash(key,    magic,cmd,hash,_ORS){
-	magic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-	cmd = sprintf("printf '%s' | openssl sha1 -binary | openssl base64", key magic)
-	cmd | getline hash
-	return substr(hash,0, 28)
+function receive_content(host, 		info,str){
+	info = ""
+	while(host |& getline str){
+		if (str == "")
+			break
+		info = info str
+	}
+	return info
+}
+function terminate(host, errcode, errmsg){
+	print errmsg | "cat 1>&2"
+	close(host)
+	exit errcode
 }
 
-
-function chr(c)
-{
-    # force c to be numeric by adding 0
-    return sprintf("%c", c + 0)
-}

@@ -1,12 +1,40 @@
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-	var ws = new WebSocket('ws://localhost:16123/');
+	var req =getXmlHttp();
 
-	ws.onmessage = function(event) {
-		  console.log('Count is: ' + event.data);
-		  console.log("Answer sent");
-		  ws.send("Hola");
-		  ws.send("hola");
-	};
+	req.onreadystatechange = function(){
+		if(req.readyState == 4){
+			console.log(req.responseText);
+		}
+	}
+
+	
+	req.open('POST', '/ajax', true); 
+	req.send("fuckup\r\n\r\n");
+	setTimeout(function(){
+		req.open('POST', '/ajax', true); 
+		req.send("fuckup twice\r\n\r\n");
+	},2000);
 });
+function getXmlHttp(){
+  var xmlhttp;
+  try {
+    xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+  } catch (e) {
+    try {
+      xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+    } catch (E) {
+      xmlhttp = false;
+    }
+  }
+  if (!xmlhttp && typeof XMLHttpRequest!='undefined') {
+    xmlhttp = new XMLHttpRequest();
+  }
+  return xmlhttp;
+}
 </script>
+<html>
+	<body>
+	hello, nigga
+	</body>
+</html>
