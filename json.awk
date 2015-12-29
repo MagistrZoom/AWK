@@ -1,8 +1,8 @@
 #   Map 
 #   ===
 #    JS-object:
-#    var map = {
-#       parametrs : {
+#    var maze = {
+#       params : {
 #          width  : <VALUE>,
 #          heigth : <VALUE>
 #       },
@@ -11,35 +11,32 @@
 # 
 #    JSON string:
 #    {
-#       "parametrs" : {
+#       "params" : {
 #          "width"  : <VALUE>,
 #          "heigth" : <VALUE>
 #       },
 #       "area" : [ <ARRAY> ]
 #    }
 #
-# Data
-# ====
+# Content 
+# =======
 #    JS-object:
 # 
-#    var objects = {
+#    var content = {
 #       user : {
 #          pos    : <CELL>,
 #          ID     : <ID>,
 #          health : <HP>,
-#       }
-#       itmes : {
-#          # What is the best decision? An array of poss? 
-#          #   Is there more clever idea?   
-#           
+#       },
+#       mobs : {
 #          trap : {
 #             pos : [ <ARRAY> ] 
 #          },
 #          heal : {
 #             pos : [ <ARRAY> ] 
 #          }
-#       }
-#       other : {
+#       },
+#       players : {
 #          pos    : [ <ARRAY> ]      
 #       }
 #    };
@@ -51,7 +48,7 @@
 #          "health"   : <HP>
 #          "pos"      : <CELL>,
 #       },
-#       "itmes" : {
+#       "mobs" :  {
 #          "traps" : {
 #                "pos" : [ <ARRAY> ]
 #          },
@@ -59,110 +56,114 @@
 #                "pos" : [ <ARRAY> ]
 #          }
 #       },
-#       "other" : {
+#       "players" : {
 #          "pos"      :  [ <ARRAY> ]
 #       }
 #    }
 # 
+#  Init_object
+#  ===========
+#  
+#  var init = {   
+#     maze    : <maze-object>
+#     content : <content-object> 
+#  };
+#
+#  JSON 
+#  {
+#     "maze"   : "json-maze" 
+#     "conent" : "json-conent"
+#  }
+#
 
 # port     -- port of the main user
 # filename -- name of file with data
 # OR string is more suitable? 
 
-function map_to_json( filename ) {
-   
+
+
+# Use global: size, sizeX, sizeY 
+function maze_to_json(maze,    json) {
+
    old_delim = FS
    FS=" "
 
-   template = "{\"parametrs\":{\"width\":\"%d\",\"heigth\":\"%d\"},\"area\": [%s]}"
+   template = "{\"params\":{\"width\":\"%d\",\"heigth\":\"%d\"},\"area\": [%s]}"
+   area = maze[0]
+   for ( i = 1; i < size; i++)
+      area = area RT "," RT maze[i]
+   json = sprintf( template, sizeX, sizeY, area )
 
-   getline params < filename
-   getline area < filename
-  
-   gsub(/./, "&,", area)
-   gsub(/.$/,"",area) # make it easer, stupid
-   
-   $0 = params
-   json = sprintf( template, $1, $2, area )
-   
    FS = old_delim
+
    return json
 }
 
-function data_to_json( port, filename ) {
-   
+#Use global: amountUser
+function content_to_json(mods, users, UID,   json) {
+ 
    old_delim = FS
    FS = " "
-   template_user = "{\"user\":{\"ID\":%d,\"health\":%d,\"pos\":%d},"
-   template_items = "\"items\":{\"traps\":{\"pos\":[%s]},\"heals\":{\"pos\":[%s]},"
-   template_others = "\"other\":{\"pos\":[%s]}"
 
-   heal_count = 0; heal_pos = ""
-   trap_count = 0; trap_pos = ""
-   user = ""
-   others = ""
-   offset = 0
-   count = 0
-   while(( getline line < filename ) > 0 ) {
-      if( count == 0 ) {
-         heal_count = int(line)
-         offset += heal_count;
-         
-         for( i = 0; i < heal_count; i++) {
-            getline  line < filename
-            heal_pos =  line RT "," RT heal_pos 
-            count++
-         }
-         gsub(/,\n$/,"",heal_pos)
-      }
-      else if( count == offset ) {
-         trap_count = int(line)        
-         for( i=0; i < trap_count; i++) {
-            getline line < filename
-            trap_pos = line RT "," RT trap_pos
-            count++
-         }
-         gsub(/,\n$/,"",trap_pos)
+   template_user = "{\"user\":{\"ID\":%d,\"health\":%d,\"pos\":%d},"
+   template_items = "\"mobs\":{\"traps\":{\"pos\":[%s]},\"heals\":{\"pos\":[%s]},"
+   
+   template_others = "\"players\":{\"pos\":[%s]}"
+
+   for( i = 0; i < amountUser; i++){
+      if( i == UID) {
+         user = sprintf(template_user, i, users[i][1], users[i][0])
       }
       else {
-         $0 = line
-         if( $3 == port ) {
-            user = sprintf( template_user, $3, $2, $1 )
-         }
-         else {
-               others = $2 "," others   
-            }
-            count++
-         }
+         players = users[i][0] RT "," players         
       }
-      gsub(/,$/,"",others)
+   }
+   gsub(/,$/,"", players); 
 
-      # This condition correspond to the error:
-      # either user's port is incocrrect or my algorithm failed. 
-      if( user == "" ) {
-         user = sprintf( template_user, 0, 0, 0)
-      }
-      # If there is only one user at the time.
-      if( others == "") {
-         others = sprintf(template_others, -1)
-      }
-      items  = sprintf( template_items, trap_pos, heal_pos)
-      others = sprintf( template_others, others)
-      result = user RT items RT others RT "}"
-      gsub(/\n/,"",result)
-      FS = old_delim
-      return result
+   # This condition correspond to the error:
+   # either user's port is incocrrect or my algorithm failed. 
+   if( user == "" ) {
+      user = sprintf( template_user, -1, -1, -1)
+   }
+   # If there is only one user at the time.
+   if( players == "") {
+      players = sprintf(template_others, -1)
+   }
+   
+   for( i = 0; i < amountFruit; i++ )
+      heals = mods[i] RT "," heals 
+   gsub(/,$/,"",heals)
+   for( i = amountFruit; i < amountTraps+amountFruits; i++)
+      traps = mods[i] RT ","traps
+   gsub(/,$/,"",traps)
+
+   mobs    = sprintf( template_items, traps, heals)
+   players = sprintf( template_others, players)
+   result  = user RT mobs RT players RT "}"
+
+   FS = old_delim
+   return result
 }
 
+function init_to_json( UID, users, maze, mods,     json){
+   template_init = "{\"maze\":\"%s\",\"content\":\"%s\"}"
+   maze_json = maze_to_json( maze )
+   content_json = content_to_json(mods, users, UID)
+
+   return sprintf(template_init, maze_json, content_json )
+}
 # From clients server gets the information about users' movements. 
 #
 #  
 #  JS-object
-#        var movement = <MOVE>  
+#        var state = { 
+#               ID   : <ID>, 
+#               move : <MOVE>   
 #  
 #  JSON-object
 #     { 
-#        <MOVE>
+#        "ID"  : <ID>,
+#        "move": <move> 
 #     }
 #
 #     MOVE -> [ 0, 1, 2, 3]
@@ -170,8 +171,13 @@ function data_to_json( port, filename ) {
 #       --  1 - right
 #       --  2 - down 
 #       --  3 - left
-#     ( Yse, it is only a number. Surprise? )
+#
+
+# user_state[1] -- UID
+# user_state[2] -- direction
 function from_json( json ) {
-   gsub( /[^0-9]+/, "", json);
-   return json;
+   json = "{\"ID\":2,\"move\":1}"
+   if( match( json, /"ID":([0-9]*).*":([0-9]*)/, user_state) == 0 )
+      print "Error: cannot parse JSON-string in function 'from_jsob'"
+   return user_state  
 }
