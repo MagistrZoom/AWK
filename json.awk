@@ -17,8 +17,6 @@
 #       },
 #       "area" : [ <ARRAY> ]
 #    }
-#   
-#     With "borders" it more OO-style, but is it necessary in our case?
 #
 # Data
 # ====
@@ -73,86 +71,87 @@
 
 function map_to_json( filename ) {
    
-   old_delim = FS; 
-   FS=" ";
+   old_delim = FS
+   FS=" "
 
-   template = "{\"parametrs\":{\"width\":\"%d\",\"heigth\":\"%d\"},\"area\": [%s]}"; 
+   template = "{\"parametrs\":{\"width\":\"%d\",\"heigth\":\"%d\"},\"area\": [%s]}"
 
-   getline params < filename;
-   getline area < filename;
+   getline params < filename
+   getline area < filename
   
-   gsub(/./, "&,", area);
-   gsub(/.$/,"",area); # make it easer, stupid
+   gsub(/./, "&,", area)
+   gsub(/.$/,"",area) # make it easer, stupid
    
-   $0 = params;
-   json = sprintf( template, $1, $2, area );
+   $0 = params
+   json = sprintf( template, $1, $2, area )
    
-   FS = old_delim;
-   return json;
+   FS = old_delim
+   return json
 }
 
 function data_to_json( port, filename ) {
    
-   old_delim = FS;
-   FS = " ";
+   old_delim = FS
+   FS = " "
    template_user = "{\"user\":{\"ID\":%d,\"health\":%d,\"pos\":%d},"
-   template_items = "\"items\":{\"traps\":{\"pos\":[%s]},\"heals\":{\"pos\":[%s]},";
-   template_others = "\"other\":{\"pos\":[%s]}";
+   template_items = "\"items\":{\"traps\":{\"pos\":[%s]},\"heals\":{\"pos\":[%s]},"
+   template_others = "\"other\":{\"pos\":[%s]}"
 
-   heal_count = 0; heal_pos = "";
-   trap_count = 0; trap_pos = "";
-   user = ""; others = "";
-   offset = 0;
-   count = 0;
+   heal_count = 0; heal_pos = ""
+   trap_count = 0; trap_pos = ""
+   user = ""
+   others = ""
+   offset = 0
+   count = 0
    while(( getline line < filename ) > 0 ) {
       if( count == 0 ) {
-         heal_count = int(line);
-         offset += heal_count; 
+         heal_count = int(line)
+         offset += heal_count;
          
          for( i = 0; i < heal_count; i++) {
-            getline  line < filename; 
-            heal_pos =  line RT "," RT heal_pos;   
-            count++;
+            getline  line < filename
+            heal_pos =  line RT "," RT heal_pos 
+            count++
          }
-         gsub(/,\n$/,"",heal_pos);
+         gsub(/,\n$/,"",heal_pos)
       }
       else if( count == offset ) {
-         trap_count = int(line);         
+         trap_count = int(line)        
          for( i=0; i < trap_count; i++) {
-            getline line < filename;
-            trap_pos = line RT "," RT trap_pos;
-            count++;
+            getline line < filename
+            trap_pos = line RT "," RT trap_pos
+            count++
          }
-         gsub(/,\n$/,"",trap_pos);
+         gsub(/,\n$/,"",trap_pos)
       }
       else {
-         $0 = line;
+         $0 = line
          if( $3 == port ) {
-            user = sprintf( template_user, $3, $2, $1 );
+            user = sprintf( template_user, $3, $2, $1 )
          }
          else {
-               others = $2 "," others;   
+               others = $2 "," others   
             }
-            count++;
+            count++
          }
       }
-      gsub(/,$/,"",others);
+      gsub(/,$/,"",others)
 
       # This condition correspond to the error:
       # either user's port is incocrrect or my algorithm failed. 
       if( user == "" ) {
-         user = sprintf( template_user, 0, 0, 0);
+         user = sprintf( template_user, 0, 0, 0)
       }
       # If there is only one user at the time.
       if( others == "") {
-         others = sprintf(template_others, -1);
+         others = sprintf(template_others, -1)
       }
-      items  = sprintf( template_items, trap_pos, heal_pos);
-      others = sprintf( template_others, others); 
-      result = user RT items RT others RT "}"; 
-      gsub(/\n/,"",result);
-      FS = old_delim;
-      return result; 
+      items  = sprintf( template_items, trap_pos, heal_pos)
+      others = sprintf( template_others, others)
+      result = user RT items RT others RT "}"
+      gsub(/\n/,"",result)
+      FS = old_delim
+      return result
 }
 
 # From clients server gets the information about users' movements. 
@@ -162,16 +161,16 @@ function data_to_json( port, filename ) {
 #        var movement = <MOVE>  
 #  
 #  JSON-object
-#     {
-#           "movement" : <MOVE>
+#     { 
+#        <MOVE>
 #     }
 #
-#     MOVE : [ 0, 1, 2, 3]
+#     MOVE -> [ 0, 1, 2, 3]
 #       --  0 - up
 #       --  1 - right
 #       --  2 - down 
 #       --  3 - left
-
+#     ( Yse, it is only a number. Surprise? )
 function from_json( json ) {
    gsub( /[^0-9]+/, "", json);
    return json;
