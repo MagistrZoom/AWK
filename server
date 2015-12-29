@@ -7,8 +7,14 @@ END {
 	RS = ORS = "\r\n"
 	port = 1488
 	host = "/inet/tcp/" port "/0/0"  # host string 
-
+	
+#maze
+	sizeX = 40
+	sizeY = 40
 #END OF SETTINGS
+	srand() #4 maze
+	generate()
+
 	while(1){
 		receive_http(headers, host)
 		err[0] = 0
@@ -22,7 +28,7 @@ END {
 			}	
 		}
 		if(headers["POST"] != ""){
-			content = ajax(host,err)	
+			content = ajax_post(host,err)	
 			if(err[1] == 1){
 				print "HTTP/1.1 404 Not Found" |& host
 				close (host)
@@ -47,7 +53,7 @@ function make_a_headers(content_length,    headers){
 	"Content-Language: en" ORS
 }
 
-function read_if_exist(host,request,err,         test_result,_RS,tmp,matches){
+function read_if_exist(host,request,err,         test_result,_RS,tmp,matches,datafile){
 	_RS = RS
 	RS = "\n"
 	
@@ -59,11 +65,19 @@ function read_if_exist(host,request,err,         test_result,_RS,tmp,matches){
 		return ""
 	}
 	
+	matches = match(request, /ajax_get/);
+	if(matches != 0){
+		#return datafile to user
+		datafile = ajax_get(host)
+		err[1] = 2
+		RS = _RS
+		return datafile
+	}
 	tmp = sprintf("test -e %s || echo $?", request) 
 	tmp | getline test_result
 	close(tmp)
 	if(strtonum(test_result) != 0){
-		err[1] = 2
+		err[1] = 3
 		RS = _RS
 		return ""
 	}
@@ -75,10 +89,37 @@ function read_if_exist(host,request,err,         test_result,_RS,tmp,matches){
 	return tmp
 }
 
-function ajax(host,err,       received){
+function ajax_post(host,err,       received){
+	if(received == "move"){
+		#TODO: parse move direction & uid
+		move(uid, direction)
+		users = get_users_statement()
+		mods = get_mods() #get_mods
+		#TODO: pack to json
+		json = tojson123(users, uid) #blablabla
+		return json; #TODO: maze
+	}
+}
+function ajax_get(host,err,   received){
 	received = receive_content(host)
-	print received
-	return received
+	if(recevied == 	"init"){
+		id = make_UID()
+		#maze 
+		users = get_users_position()
+		maze = get_maze()
+		mods = get_mods()
+		#TODO: pack to json
+		json = tojson(id,users,maze,mods) #blablabla
+		return json; #TODO: maze
+	}
+	#TODO parse uid
+	if(received == "get_statement"){
+		users = get_users_statement()
+		mods = get_mods()
+		#TODO: pack to json
+		json = tojson123(mods, users, uid) #blablabla
+		return json; #TODO: maze
+	}	
 }
 function receive_http(headers, host,      str,tmp,matches){
 	while(host |& getline str){
@@ -111,4 +152,418 @@ function terminate(host, errcode, errmsg){
 	close(host)
 	exit errcode
 }
+
+function map_to_json( filename ) {
+   
+   old_delim = FS
+   FS=" "
+
+   template = "{\"parametrs\":{\"width\":\"%d\",\"heigth\":\"%d\"},\"area\": [%s]}"
+
+   getline params < filename
+   getline area < filename
+  
+   gsub(/./, "&,", area)
+   gsub(/.$/,"",area) # make it easer, stupid
+   
+   $0 = params
+   json = sprintf( template, $1, $2, area )
+   
+   FS = old_delim
+   return json
+}
+
+function data_to_json( port, filename ) {
+   
+   old_delim = FS
+   FS = " "
+   template_user = "{\"user\":{\"ID\":%d,\"health\":%d,\"pos\":%d},"
+   template_items = "\"items\":{\"traps\":{\"pos\":[%s]},\"heals\":{\"pos\":[%s]},"
+   template_others = "\"other\":{\"pos\":[%s]}"
+
+   heal_count = 0; heal_pos = ""
+   trap_count = 0; trap_pos = ""
+   user = ""
+   others = ""
+   offset = 0
+   count = 0
+   while(( getline line < filename ) > 0 ) {
+      if( count == 0 ) {
+         heal_count = int(line)
+         offset += heal_count;
+         
+         for( i = 0; i < heal_count; i++) {
+            getline  line < filename
+            heal_pos =  line RT "," RT heal_pos 
+            count++
+         }
+         gsub(/,\n$/,"",heal_pos)
+      }
+      else if( count == offset ) {
+         trap_count = int(line)        
+         for( i=0; i < trap_count; i++) {
+            getline line < filename
+            trap_pos = line RT "," RT trap_pos
+            count++
+         }
+         gsub(/,\n$/,"",trap_pos)
+      }
+      else {
+         $0 = line
+         if( $3 == port ) {
+            user = sprintf( template_user, $3, $2, $1 )
+         }
+         else {
+               others = $2 "," others   
+            }
+            count++
+         }
+      }
+      gsub(/,$/,"",others)
+
+      # This condition correspond to the error:
+      # either user's port is incocrrect or my algorithm failed. 
+      if( user == "" ) {
+         user = sprintf( template_user, 0, 0, 0)
+      }
+      # If there is only one user at the time.
+      if( others == "") {
+         others = sprintf(template_others, -1)
+      }
+      items  = sprintf( template_items, trap_pos, heal_pos)
+      others = sprintf( template_others, others)
+      result = user RT items RT others RT "}"
+      gsub(/\n/,"",result)
+      FS = old_delim
+      return result
+}
+
+# From clients server gets the information about users' movements. 
+#
+#  
+#  JS-object
+#        var movement = <MOVE>  
+#  
+#  JSON-object
+#     { 
+#        <MOVE>
+#     }
+#
+#     MOVE -> [ 0, 1, 2, 3]
+#       --  0 - up
+#       --  1 - right
+#       --  2 - down 
+#       --  3 - left
+#     ( Yse, it is only a number. Surprise? )
+function from_json( json ) {
+   gsub( /[^0-9]+/, "", json);
+   return json;
+}
+#	BEGIN {
+#		system("gcc -ansi -pedantic -o lock lock.c");
+#	
+#		OFS = "";
+#		OUT = "maze";
+#		DATA = "data";
+#	
+#		sizeX = 40;
+#		sizeY = 40;
+#	
+#		srand();
+#		generate();
+#	
+#	#wait for message
+#		newThread();
+#	}
+
+
+function generate(   i) {
+	size = sizeX * sizeY; # Размер лабиринта (количество ячеек)
+
+	generateMaze(sizeX,sizeY);
+
+	amountFruits = int(size / 10);
+	amountTraps = int(size / 15);
+	generateMods(amountFruits + amountTraps);
+	
+}
+
+function generateMaze(sizeX,sizeY) {
+
+	ORS="";
+	print(sizeX" "sizeY"\n") > OUT;
+	setUnique = 1; # Текущий номер уникального множества
+	
+	# Инициализируем переменные
+	for(i = 0; i < size; i++) {
+		set[i] = 0;
+		rightBound[i] = 0;
+		bottomBound[i] = 0;
+		bounds[i] = 0;
+	}
+	
+	# Цикл по строкам лабиринта
+	for(i = 0; i < sizeY; i++) {
+		offset = i * sizeX;
+		# Цикл по столбцам лабиринта
+		for(j = offset; j < offset + sizeX; j++) {
+			# Присвоим пустым ячейкам уникальное множество
+			if(!set[j]) {
+				set[j] = setUnique++;
+			}
+		}
+	
+	# Создадим границы справа
+		for(j = offset; j < offset + (sizeX - 1); j++) {
+			# Решим, добавлять ли границу справа
+			bound = rand();
+			if(bound > 0.5) bound = 1;
+			else bound = 0;
+			
+			# Создадим границу, если текущая
+			# ячейка и ячейка справа
+			# принадлежат одному множеству
+			if(set[j] == set[j+1]) {
+				bound = 1;
+			}
+			
+			if(bound) rightBound[j] = 1;
+			else union(set[j], set[j+1]);
+		}
+		rightBound[offset+sizeX-1] = 1;
+		
+		# Создадим границы снизу
+		for(j = offset; j < offset + sizeX; j++) {
+			# Решим, добавлять ли границу снизу
+			bound = rand();
+			if(bound > 0.5) bound = 1;
+			else bound = 0;
+			
+			# Если ячейка одна в своем множестве,
+			# то нижняя граница не добавляется
+			alone = 1;
+			for(k = offset; k < offset + sizeX; k++) {
+				if((set[j] == set[k]) && (j != k)) {
+					alone = 0;
+					break;
+				}
+			}
+			if(alone) bound = 0;
+			
+			# Если ячейка одна в своем множестве без
+			# нижней границы, то нижняя граница не
+			# создается
+			alone = 1;
+			for(k = offset; k < offset + sizeX; k++) {
+				if((set[j] == set[k]) && (j != k)) {
+					if(!bottomBound[k]) {
+						alone = 0;
+						break;
+					}
+				}
+			}
+			if(alone) bound = 0;
+			if(bound) bottomBound[j] = 1;
+		}
+		
+		if(i != (sizeY - 1)) {
+			# Скопируем строку в следующую
+			for(j = offset; j < offset + sizeX; j++) {
+				set[sizeX+j] = set[j];
+				bottomBound[sizeX+j] = bottomBound[j];
+				
+				# Удалим ячейки с нижней границей из их множества
+				if(bottomBound[sizeX+j]) {
+					set[sizeX+j] = 0;
+				}
+				# Удалим все нижние границы
+				bottomBound[sizeX+j] = 0;
+			}
+		}
+		else {
+			for(j = offset; j < offset + (sizeX - 1); j++) {
+				# Добавим нижнюю границу к каждой ячейке
+				bottomBound[j] = 1;
+				
+				# Удалим правую границу, если соседние
+				# ячейки принадлежат разным множествам
+				if(set[j] != set[j+1]) {
+					rightBound[j] = 0;
+					# И объеденим эти множества
+					union(set[j], set[j+1]);
+				}
+			}
+			bottomBound[size-1] = 1;	
+		}
+	}
+	for(i = 0; i < size; i++){
+		bounds[i] = rightBound[i] + 2 * bottomBound[i];
+		print(bounds[i]) >> OUT;
+	}
+	close(OUT);
+	ORS="\n";
+}
+
+function generateMods(amount,  i,j,r,rep) {
+	for(i = 0; i < amount; i++) {
+		rep = 1;
+		mods[i] = size + 1;
+
+		while(rep) {
+			rep = 0;
+			r = randCell();
+
+			for(j = 0; j < i; j++) {
+				if(mods[j] == r) {
+					rep = 1;
+					break;
+				}
+			}
+		}
+		mods[i] = r;
+	}
+}
+
+
+function union(set1,set2) {
+	# Объединение множеств
+	for(s = 0; s < size; s++) {
+		if(set[s] == set2) {
+			set[s] = set1;
+		}
+	}
+}
+
+function randCell() {
+	return int((size - 1) * rand());  
+}
+#BEGIN {
+#	amountUsers = 0;
+#
+#	STARTHP = 100;
+#	MAXHP = 150;
+#
+#	DRAND = 10;
+#	DAMAGE = 10;
+#	DTRAPS = 20;
+#	HEAL = 25;
+#
+#	clientPort = ARGV[1];
+#
+#	OFS = "";
+#	MAZE = "maze";
+#	DATA = "data";
+#
+#	sizeX = 0;
+#	sizeY = 0;
+#	size = 0;
+#
+#	srand();
+##ID = serverPort;
+#	ID = 20;
+#	
+#	start();
+#}
+
+
+function replaceMod(mod, i) {
+	mods[mod] = getFreeCell();
+}
+
+function randCell() {
+	return int((size - 1) * rand());  
+}
+
+function getFreeCell( r,rep,i) {
+	rep = 1;
+
+	while(rep) {
+		rep = 0;
+		r = randCell();
+
+		for(i = 0; i < amountFruits + amountTraps; i++) {
+			if(mods[i] == r) {
+				rep = 1;
+				break;
+			}
+		}
+		for(i = 0; i < amountUsers; i++) {
+			if(users[i][1] == r) {
+				rep = 1;
+				break;
+			}
+		}
+	}
+	return r;
+}
+
+function goRight( newCell) {
+	newCell = users[thisUser][1] + 1;
+	if(!rightBound[users[thisUser][1]])
+		goToCell(newCell);
+}
+
+function goLeft( newCell) {
+	if((users[thisUser][1] % sizeX)&&(!rightBound[users[thisUser][1] - 1]))
+	newCell = users[thisUser][1] - 1;
+		goToCell(newCell);
+}
+
+function goUp( newCell) {
+	newCell = users[thisUser][1] - sizeX;
+	if((newCell >= 0) && (!bottomBound[newCell])) goToCell();
+		goToCell(newCell);
+}
+
+function goDown( newCell) {
+	newCell = users[thisUser][1] + sizeX;
+	if(!bottomBound[newCell])
+		goToCell(newCell);
+}
+
+function goToCell(cell, i) {
+	for(i = 0; i < amountFruits + amountTraps; i++) {
+		if(mods[i] == cell) {
+			if(i < amountFruits) {
+				users[thisUser][2] += HEAL;
+				if(users[thisUser][2] >= MAXHP) {
+					users[thisUser][2] = MAXHP;
+				}
+			} else {
+				users[thisUser][2] -= int(DTRAPS + DRAND * rand());
+				if(users[thisUser][2] <= 0) {
+					dead(thisUser);
+					mods[i] = getFreeCell();
+					return;
+				}
+			}
+			
+			users[thisUser][1] = cell;
+			mods[i] = getFreeCell();
+			return;
+		}
+	}
+
+	for(i = 0; i < amountUsers; i++) {
+		if(users[i][1] == cell) {
+			attack(i);
+			return;
+		}
+	}
+
+	users[thisUser][1] = cell;
+}
+
+function attack( user) {
+	users[user][2] -= int(DAMAGE + DRAND * rand());
+	if(users[user][2] <= 0) {
+		dead(user);
+	}
+}
+
+function dead( user) {
+	users[user][1] = getFreeCell();
+	users[user][2] = STARTHP;
+}
+
 
