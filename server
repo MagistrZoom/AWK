@@ -23,8 +23,8 @@ END {
 	DAMAGE = 10;
 	DTRAPS = 20;
 	HEAL = 25;
-
 #END OF SETTINGS
+
 	srand() #4 maze
 	generate()
 
@@ -102,19 +102,19 @@ function read_if_exist(host,request,err,         test_result,_RS,tmp,matches,dat
 	return tmp
 }
 
-function ajax_post(host,err,       received){
-	if(received ~ /move:\d+/){
+function ajax_post(host,err,       received,integers){
+	if(received ~ /move:\d \d+|/){
 		#TODO: parse move direction & uid
-		move(uid, direction)
+		match(received, /mode:(\d) (\d+)/, integers)
+		move(integers[2], integers[1])
 		
 		#see init: users, mods
-
 		#TODO: pack to json
 		json = tojson123(users, mods, uid) #blablabla
 		return json; #TODO: maze
 	}
 }
-function ajax_get(host,err,   received){
+function ajax_get(host,err,   received,uid){
 	received = receive_content(host)
 	if(recevied == 	"init"){
 		id = make_UID()
@@ -130,9 +130,9 @@ function ajax_get(host,err,   received){
 	if(received ~ /get_statement:\d+/){
 
 		#see init: users, mods;
-
+		matches(received, /get_statement:(\d+)/, uid)
 		#TODO: pack to json
-		json = tojson123(mods, users, uid) #blablabla
+		json = tojson123(mods, users, uid[0]) #blablabla
 		return json; #TODO: maze
 	}	
 }
