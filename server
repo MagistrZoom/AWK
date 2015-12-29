@@ -166,7 +166,7 @@ function terminate(host, errcode, errmsg){
 	exit errcode
 }
 
-function generate(   i) {
+function generate() {
 	size = sizeX * sizeY;
 
 	generateMaze(sizeX,sizeY);
@@ -174,7 +174,6 @@ function generate(   i) {
 	amountFruits = int(size / 10);
 	amountTraps = int(size / 15);
 	generateMods(amountFruits + amountTraps);
-	
 }
 
 function generateMods(amount,  i,j,r,rep) {
@@ -417,7 +416,7 @@ function goUp(id, newCell) {
 		goToCell(newCell,id);
 }
 
-function goDown( newCell) {
+function goDown(id, newCell) {
 	newCell = users[id][0] + sizeX;
 	if(!bottomBound[newCell])
 		goToCell(newCell,id);
