@@ -130,7 +130,7 @@ function content_to_json(mods, users, UID,   json) {
       players = sprintf(template_others, -1)
    }
    
-   for( i = 0; i < amountFruit; i++ )
+   for( i = 0; i < amountFruits; i++ )
       heals = mods[i] RT "," heals 
    gsub(/,$/,"",heals)
    for( i = amountFruit; i < amountTraps+amountFruits; i++)
