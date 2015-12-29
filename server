@@ -1,5 +1,7 @@
 #!/usr/bin/gawk -f
 
+@include "./json"
+
 END { 
 #SЕTTINGS
 
@@ -101,7 +103,7 @@ function read_if_exist(host,request,err,         test_result,_RS,tmp,matches,dat
 }
 
 function ajax_post(host,err,       received){
-	if(received == "move"){
+	if(received ~ /move:\d+/){
 		#TODO: parse move direction & uid
 		move(uid, direction)
 		
@@ -125,7 +127,7 @@ function ajax_get(host,err,   received){
 		return json; #TODO: maze
 	}
 	#TODO parse uid
-	if(received == "get_statement"){
+	if(received ~ /get_statement:\d+/){
 
 		#see init: users, mods;
 
@@ -203,152 +205,6 @@ function make_UID( id){
 	users[id][0] = getFreeCell();
 	return id;
 }
-
-function randCell() {
-	return int((size - 1) * rand());  
-}
-
-function map_to_json( filename ) {
-   
-   old_delim = FS
-   FS=" "
-
-   template = "{\"parametrs\":{\"width\":\"%d\",\"heigth\":\"%d\"},\"area\": [%s]}"
-
-   getline params < filename
-   getline area < filename
-  
-   gsub(/./, "&,", area)
-   gsub(/.$/,"",area) # make it easer, stupid
-   
-   $0 = params
-   json = sprintf( template, $1, $2, area )
-   
-   FS = old_delim
-   return json
-}
-
-function data_to_json( port, filename ) {
-   
-   old_delim = FS
-   FS = " "
-   template_user = "{\"user\":{\"ID\":%d,\"health\":%d,\"pos\":%d},"
-   template_items = "\"items\":{\"traps\":{\"pos\":[%s]},\"heals\":{\"pos\":[%s]},"
-   template_others = "\"other\":{\"pos\":[%s]}"
-
-   heal_count = 0; heal_pos = ""
-   trap_count = 0; trap_pos = ""
-   user = ""
-   others = ""
-   offset = 0
-   count = 0
-   while(( getline line < filename ) > 0 ) {
-      if( count == 0 ) {
-         heal_count = int(line)
-         offset += heal_count;
-         
-         for( i = 0; i < heal_count; i++) {
-            getline  line < filename
-            heal_pos =  line RT "," RT heal_pos 
-            count++
-         }
-         gsub(/,\n$/,"",heal_pos)
-      }
-      else if( count == offset ) {
-         trap_count = int(line)        
-         for( i=0; i < trap_count; i++) {
-            getline line < filename
-            trap_pos = line RT "," RT trap_pos
-            count++
-         }
-         gsub(/,\n$/,"",trap_pos)
-      }
-      else {
-         $0 = line
-         if( $3 == port ) {
-            user = sprintf( template_user, $3, $2, $1 )
-         }
-         else {
-               others = $2 "," others   
-            }
-            count++
-         }
-      }
-      gsub(/,$/,"",others)
-
-      # This condition correspond to the error:
-      # either user's port is incocrrect or my algorithm failed. 
-      if( user == "" ) {
-         user = sprintf( template_user, 0, 0, 0)
-      }
-      # If there is only one user at the time.
-      if( others == "") {
-         others = sprintf(template_others, -1)
-      }
-      items  = sprintf( template_items, trap_pos, heal_pos)
-      others = sprintf( template_others, others)
-      result = user RT items RT others RT "}"
-      gsub(/\n/,"",result)
-      FS = old_delim
-      return result
-}
-
-# From clients server gets the information about users' movements. 
-#
-#  
-#  JS-object
-#        var movement = <MOVE>  
-#  
-#  JSON-object
-#     { 
-#        <MOVE>
-#     }
-#
-#     MOVE -> [ 0, 1, 2, 3]
-#       --  0 - up
-#       --  1 - right
-#       --  2 - down 
-#       --  3 - left
-#     ( Yse, it is only a number. Surprise? )
-function from_json( json ) {
-   gsub( /[^0-9]+/, "", json);
-   return json;
-}
-#	BEGIN {
-#		system("gcc -ansi -pedantic -o lock lock.c");
-#	
-#		OFS = "";
-#		OUT = "maze";
-#		DATA = "data";
-#	
-#		sizeX = 40;
-#		sizeY = 40;
-#	
-#		srand();
-#		generate();
-#	
-#	#wait for message
-#		newThread();
-#	}
-
-#BEGIN {
-#	clientPort = ARGV[1];
-#
-#	OFS = "";
-#	MAZE = "maze";
-#	DATA = "data";
-#
-#	sizeX = 0;
-#	sizeY = 0;
-#	size = 0;
-#
-#	srand();
-##ID = serverPort;
-#	ID = 20;
-#	
-#	start();
-#}
-
 
 function replaceMod(mod, i) {
 	mods[mod] = getFreeCell();
@@ -470,7 +326,6 @@ function dead( user) {
 function generateMaze(sizeX,sizeY) {
 
 	ORS="";
-	print(sizeX" "sizeY"\n") > OUT;
 	setUnique = 1; # Текущий номер уникального множества
 	
 	# Инициализируем переменные

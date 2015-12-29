@@ -33,3 +33,13 @@ amountUsers -- count of players.
 users[id][] -- array of each user's parameters.  
   users[id][0] - location of user   
   users[id][1] - HP   
+
+###AJAX GET requests
+init
+
+get_statement:UID
+  UID - integer
+
+###AJAX POST Requests
+move:DIRECTION
+  DIRECTION: 0 to 3 NESW
