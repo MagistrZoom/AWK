@@ -11,6 +11,7 @@ END {
 #END OF SETTINGS
 	while(1){
 		receive_http(headers, host)
+		err[0] = 0
 		if(headers["GET"] != ""){	
 			content = read_if_exist(host,headers["GET"],err)
 			if(err[1] == 1){
@@ -52,17 +53,16 @@ function read_if_exist(host,request,err,    ls_out,_RS,tmp,matches){
 	RS = "\n"
 	
 	# goto :hell, scriptkiddy!
-	matches = match(request, "../")
-	
+	matches = match(request, /\.\.\//)
 	if(matches != 0){
 		RS = _RS
-		err = 1
+		err[1] = 1
 		return ""
 	}
 	
-	tmp = sprintf("ls %s 2>/dev/null || echo $?", request) 
+	tmp = sprintf("test -e %s || echo $?", request) 
 	tmp | getline ls_out
-	if(ls_out == "2"){
+	if(ls_out != ""){
 		err[1] = 1
 		RS = _RS
 		return ""
