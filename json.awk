@@ -54,10 +54,10 @@
 #          },
 #          "heals" : { 
 #                "pos" : [ <ARRAY> ]
-#          }
-#       },
-#       "players" : {
-#          "pos"      :  [ <ARRAY> ]
+#          },
+#          "players" : {
+#                 "pos"      :  [ <ARRAY> ]
+#           }
 #       }
 #    }
 # 
@@ -65,7 +65,7 @@
 #  ===========
 #  
 #  var init = {   
-#     maze    : <maze-object>
+#     maze    : <maze-object>,
 #     content : <content-object> 
 #  };
 #
@@ -145,13 +145,16 @@ function content_to_json(mods, users, UID,   json) {
    return result
 }
 
+
 function init_to_json( UID, users, maze, mods,     json){
    template_init = "{\"maze\":\"%s\",\"content\":\"%s\"}"
    maze_json = maze_to_json( maze )
    content_json = content_to_json(mods, users, UID)
-
+   gsub(/"/, "\\\"", content_json );
+   gsub(/"/, "\\\"", maze_json );
    return sprintf(template_init, maze_json, content_json )
 }
+
 # From clients server gets the information about users' movements. 
 #
 #  
@@ -178,6 +181,6 @@ function init_to_json( UID, users, maze, mods,     json){
 function from_json( json ) {
    json = "{\"ID\":2,\"move\":1}"
    if( match( json, /"ID":([0-9]*).*":([0-9]*)/, user_state) == 0 )
-      print "Error: cannot parse JSON-string in function 'from_jsob'"
+      print "Error: cannot parse JSON-string in function 'from_json'"
    return user_state  
 }

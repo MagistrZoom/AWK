@@ -1,3 +1,45 @@
+//============ Begin of global-object space =================
+
+function SessionProperties( user, maze ) {
+   this.user = user;
+   this.maze = maze;
+}
+
+/* Have to be created in the network space. */
+var session; 
+
+//============ End of global-object space    =================
+
+
+
+//============ Begin of network space    =================
+window.onload = function () {
+   try {
+      //TODO: Change json - players, escape-sequence 
+      sendInit( function() {
+         var init = JSON.parse(this);                               
+         var maze = JSON.parse(init.maze);
+         var content = JSON.parse(inti.content);
+         session = new SessionProperties( content.user, maze ):
+         initFrames( content ); 
+      }); 
+      
+   }
+   catch( err ) {
+      printErrorPage( "Cannot load from server." );
+   }
+}; 
+
+function sendInit( callback ) {
+   var req = getXmlHttp(); 
+   req.onreadychange = function() {
+      if( req.readyState == 4 )
+         callback.call( req.responseText );
+   };
+   req.open( "GET", "/init", true );
+   req.send();
+}
+
 function getXmlHttp(){
   var xmlhttp;
   try {
@@ -15,44 +57,34 @@ function getXmlHttp(){
   return xmlhttp;
 }
 
-/* Doesn't work correctly. Async, my Lord! */
-function getMobs() {
-   var mobs = "";
-   var req = getXmlHttp(); 
-   req.open('GET', 'data.db', true);
-   req.send();
-   req.onreadystatechange = function() {
-      if(req.readyState == 4) {
-         mobs = req.responseText;
-         return JSON.parse( map );
-      }
-   };
-}
-function getMap() {
-   var req = getXmlHttp();
-   return JSON.parse( map );
-}
-
-function send( json ) {
+function sendMove( json ) {
    var req = getXmlHttp();
    req.open( 'POST', '/move', true);
    req.setRequestHeader( "Content-type", "application/json");
    req.send(json+"\r\n\r\n");
    console.log(req.responseText);
+
 }
 
-function addEvents() {
-   document.addEventListener( 'keydown', function(event) {
-      switch( event.keyCode ) {
-         case  38 : send(JSON.stringify(0)); break;
-         case  39 : send(JSON.stringify(1)); break;
-         case  40 : send(JSON.stringify(2)); break;
-         case  37 : send(JSON.stringify(3)); break;
-         default : return;
-       }
-   });
-}
+/* Update under timeout. */
+function update( ) {
 
+}
+//============ End of network space =================
+
+//============ Begin of face-making =================
+
+function initFrames( content ) {
+
+   try{
+      pageHeader( content.user );
+      pageBody( session.maze, mobs );
+      addEvents();
+   }
+   catch( err ){
+      printErrorPage( "Cannot generate the page" );
+   }
+}
 
 function pageHeader( user ) {
   var html = document.getElementById("header");
@@ -92,13 +124,13 @@ function pageHeader( user ) {
  *    40 -- main-user    "@"            
  */
 
-function pageBody( map, mobs ) {
+function pageBody( maze, mobs ) {
   
 
-  var width       = map.parameters.width;
-  var height      = map.parameters.height;
-  var user        = mobs.user.pos; // scalar  
-  var area_array  = map.area;
+  var width       = maze.params.width;
+  var height      = maze.params.height;
+  var user        = session.user.pos; // scalar  
+  var area_array  = maze.area;
   var wb, we, hb, he;  
   var BLOCKW = 40, BLOCKH = 20;
   
@@ -122,9 +154,9 @@ function pageBody( map, mobs ) {
                   return str + "#\n";
   })();
   for( i = 0, len = area_array.length; i < len; i++) {
-     if( i < mobs.items.heals.pos.length) { area_array[mobs.items.heals.pos[i]] += 10;}
-     if( i < mobs.items.traps.pos.length) { area_array[mobs.items.traps.pos[i]] += 20;}
-     if( i < mobs.others.pos.length)      { area_array[mobs.others.pos[i]] += 30; }
+     if( i < mobs.heals.pos.length)  { area_array[mobs.heals.pos[i]] += 10;}
+     if( i < mobs.traps.pos.length)  { area_array[mobs.traps.pos[i]] += 20;}
+     if( i < mobs.players.pos.length){ area_array[mobs.players.pos[i]] += 30; }
    }
   area_array[user] += 40;
   
@@ -165,28 +197,28 @@ function pageBody( map, mobs ) {
   area_string = area_string.replace(/!/g, "<span class=\"heals\">!</span>");
   area_string = area_string.replace(/\./g, "<span class=\"traps\">.</span>");
   area_string = area_string.replace(/W/g, "<span class=\"players\">W</span>");
-  document.getElementById("map").innerHTML = area_string; 
+  document.getElementById("maze").innerHTML = area_string; 
 }
 
-
-
-function printErrorPage( ) {
-  var html = document.getElementById("map");
-  html.innerHTML = "<h1 style=\"color:red;\"> Error </h1>";
+function printErrorPage( message ) {
+  var html = document.getElementById("maze");
+  html.innerHTML = "<h1 style=\"color:red;\"> Error:"+message+"</h1>";
 }
 
-function init_frames( ) {
-   try{
-      var map  = getMap();
-      var mobs = getMobs();
-      console.log(mobs);
-      var user = mobs.user;
-      pageHeader( user );
-      pageBody( map, mobs );
-      addEvents();
-   }
-   catch( err ){
-      printErrorPage();
-   }
+//============ End of face-making =================
+
+
+//============ Events =================
+function addEvents() {
+   document.addEventListener( 'keydown', function(event) {
+      switch( event.keyCode ) {
+         case  38 : sendMove(JSON.stringify(0)); break;
+         case  39 : sendMove(JSON.stringify(1)); break;
+         case  40 : sendMobe(JSON.stringify(2)); break;
+         case  37 : sendMobe(JSON.stringify(3)); break;
+         default : return;
+       }
+   });
 }
+
 
