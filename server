@@ -134,7 +134,7 @@ function ajax_get(host,err,   received,uid){
 		match(received, /get_statement:(\d+)/, uid)
 		# TODO: pack to json
 		json = ""
-		content_to_json(mods, users, uid[0], json) #blablabla
+		content_to_json(mods, users, uid[1], json) #blablabla
 		return json; #TODO: maze
 	}	
 }
