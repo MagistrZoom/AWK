@@ -2,8 +2,8 @@
 
 #Maze   
 size - size of maze(global)   
-sizeX - width   
-sizeY - height   
+sizeX - width(global)   
+sizeY - height(global)   
 
 mods[], users[] - global arrays   
 amountUsers, amountFruits, amountTraps - global var-s   
