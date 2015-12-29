@@ -54,16 +54,11 @@ function addEvents() {
 }
 
 
-/*
- *   UI
- *
- */
-
 function pageHeader( user ) {
   var html = document.getElementById("header");
   var str = html.innerHTML;
   var userName = (function getRandomName( ) {
-            var names = [ "Asgaroth", "Gabriel", "Lilith",   "Ishtar", "Hel",      "Abaddon" ];
+            var names = [ "Asgaroth", "Gabriel", "Lilith", "Ishtar", "Hel", "Abaddon" ];
             return names[Math.floor(Math.random()*(names.length))];
   })();
 
@@ -169,8 +164,7 @@ function pageBody( map, mobs ) {
   area_string = area_string.replace(/@/g, "<span class=\"user\">@</span>");
   area_string = area_string.replace(/!/g, "<span class=\"heals\">!</span>");
   area_string = area_string.replace(/\./g, "<span class=\"traps\">.</span>");
-  area_string = area_string.replace(/W/g, "<span class=\"others\">W</span>");
-
+  area_string = area_string.replace(/W/g, "<span class=\"players\">W</span>");
   document.getElementById("map").innerHTML = area_string; 
 }
 
@@ -183,12 +177,12 @@ function printErrorPage( ) {
 
 function init_frames( ) {
    try{
-     // var map  = getMap();
+      var map  = getMap();
       var mobs = getMobs();
       console.log(mobs);
       var user = mobs.user;
       pageHeader( user );
-   //   pageBody( map, mobs );
+      pageBody( map, mobs );
       addEvents();
    }
    catch( err ){
