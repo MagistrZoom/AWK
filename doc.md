@@ -1,5 +1,7 @@
 #Documentation   
 
+##Game-logic
+
 ###Maze
 ####Parameters 
  maze[] -- array of borders (global).
@@ -15,7 +17,7 @@ size -- size of maze (global)
 sizeX -- width (global)   
 sizeY -- height (global)   
 
-##Content 
+###Content 
 mods[] -- array of mobs' position -- traps, fruits (global).     
 amountFruits, amountTraps - count of fruits and trps (global).    
 
@@ -23,7 +25,7 @@ amountFruits, amountTraps - count of fruits and trps (global).
 mods[from 0 to (amountFruits - 1)] - fruits   
 mods[from amountFruits to (amountTraps - 1)] - traps   
 
-##Players 
+###Players 
 users[] - array of all players (global).    
 amountUsers -- count of players.          
 
