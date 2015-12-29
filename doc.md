@@ -115,13 +115,15 @@ Content -- serialized to JSON object 'conent'
 }
 ```
 ID -- user's ID   
-Move -- code of the direction
-| Code       | Direction  |
-| ------------- |:-------------:|
-|0| up |
-|1| right |
-|2| down |
-|3| left|
+Move -- code of the direction    
+
+| Code  | Direction  |
+| ----- |:----------:|
+|0|up| 
+|1|right| 
+|2|down|
+|3|left|
+   
 
 #### Functions 
 #####Stringify
