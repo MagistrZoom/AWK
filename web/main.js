@@ -19,7 +19,7 @@ function getXmlHttp(){
 function getMobs() {
    var mobs = "";
    var req = getXmlHttp(); 
-   req.open('GET', 'data', true);
+   req.open('GET', 'data.db', true);
    req.send();
    req.onreadystatechange = function() {
       if(req.readyState == 4) {

@@ -33,7 +33,6 @@ END {
 		content_length = length(content)
 		answer_headers = make_a_headers(content_length)	
 		print answer_headers ORS content |& host
-
 		close(host)
 	}
 	terminate(host, 3, "Lyl, how?")
@@ -48,7 +47,7 @@ function make_a_headers(content_length,    headers){
 	"Content-Language: en" ORS
 }
 
-function read_if_exist(host,request,err,    ls_out,_RS,tmp,matches){
+function read_if_exist(host,request,err,         test_result,_RS,tmp,matches){
 	_RS = RS
 	RS = "\n"
 	
@@ -61,16 +60,17 @@ function read_if_exist(host,request,err,    ls_out,_RS,tmp,matches){
 	}
 	
 	tmp = sprintf("test -e %s || echo $?", request) 
-	tmp | getline ls_out
-	if(ls_out != ""){
-		err[1] = 1
+	tmp | getline test_result
+	close(tmp)
+	if(strtonum(test_result) != 0){
+		err[1] = 2
 		RS = _RS
 		return ""
 	}
-	
 
 	RS = "^$"
 	getline tmp < request
+	close(request)
 	RS = _RS
 	return tmp
 }
@@ -86,9 +86,9 @@ function receive_http(headers, host,      str,tmp,matches){
 			break
 		matches	= match(str, "^([^:]*): (.*)$", tmp)
 		if(matches == 0){
-			matches =	match(str, "^([^ ]*) /([^ ]*) HTTP/1.1$", tmp)
-			if(tmp[2] == "")
-				tmp[2] = "index.html"
+			matches =	match(str, /^([^ ]*) \/(([^. ]*)(\.html|\.css|\.js|\.db)?) HTTP\/1\.1$/, tmp)
+			if(tmp[4] == "")
+				tmp[2] = tmp[3] "index.html"
 			if(matches == 0){
 				terminate(host, 1, "Wth, dude? Where is your's valid HTTP heads?");
 			}
