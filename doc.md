@@ -1,5 +1,6 @@
 #Documentation   
 
+#Maze   
 size - size of maze(global)   
 sizeX - width   
 sizeY - height   
