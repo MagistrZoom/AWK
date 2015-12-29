@@ -8,9 +8,20 @@ END {
 	port = 1488
 	host = "/inet/tcp/" port "/0/0"  # host string 
 	
-#maze
+#MAZE
 	sizeX = 40
 	sizeY = 40
+
+	amountUsers = 0;
+
+	STARTHP = 100;
+	MAXHP = 150;
+
+	DRAND = 10;
+	DAMAGE = 10;
+	DTRAPS = 20;
+	HEAL = 25;
+
 #END OF SETTINGS
 	srand() #4 maze
 	generate()
@@ -93,10 +104,11 @@ function ajax_post(host,err,       received){
 	if(received == "move"){
 		#TODO: parse move direction & uid
 		move(uid, direction)
-		users = get_users_statement()
-		mods = get_mods() #get_mods
+		
+		#see init: users, mods
+
 		#TODO: pack to json
-		json = tojson123(users, uid) #blablabla
+		json = tojson123(users, mods, uid) #blablabla
 		return json; #TODO: maze
 	}
 }
@@ -104,18 +116,19 @@ function ajax_get(host,err,   received){
 	received = receive_content(host)
 	if(recevied == 	"init"){
 		id = make_UID()
-		#maze 
-		users = get_users_position()
-		maze = get_maze()
-		mods = get_mods()
+
+		#users, mods, maze - global;
+					#amountUsers, amountFruits+amountTraps, size;
+		
 		#TODO: pack to json
 		json = tojson(id,users,maze,mods) #blablabla
 		return json; #TODO: maze
 	}
 	#TODO parse uid
 	if(received == "get_statement"){
-		users = get_users_statement()
-		mods = get_mods()
+
+		#see init: users, mods;
+
 		#TODO: pack to json
 		json = tojson123(mods, users, uid) #blablabla
 		return json; #TODO: maze
@@ -151,6 +164,49 @@ function terminate(host, errcode, errmsg){
 	print errmsg | "cat 1>&2"
 	close(host)
 	exit errcode
+}
+
+function generate(   i) {
+	size = sizeX * sizeY;
+
+	generateMaze(sizeX,sizeY);
+
+	amountFruits = int(size / 10);
+	amountTraps = int(size / 15);
+	generateMods(amountFruits + amountTraps);
+	
+}
+
+function generateMods(amount,  i,j,r,rep) {
+	for(i = 0; i < amount; i++) {
+		rep = 1;
+		mods[i] = size + 1;
+
+		while(rep) {
+			rep = 0;
+			r = randCell();
+
+			for(j = 0; j < i; j++) {
+				if(mods[j] == r) {
+					rep = 1;
+					break;
+				}
+			}
+		}
+		mods[i] = r;
+	}
+}
+
+function make_UID( id){
+	id = amountUsers;
+	amountUsers++;
+	users[id][1] = STARTHP;
+	users[id][0] = getFreeCell();
+	return id;
+}
+
+function randCell() {
+	return int((size - 1) * rand());  
 }
 
 function map_to_json( filename ) {
@@ -276,16 +332,140 @@ function from_json( json ) {
 #		newThread();
 #	}
 
+#BEGIN {
+#	clientPort = ARGV[1];
+#
+#	OFS = "";
+#	MAZE = "maze";
+#	DATA = "data";
+#
+#	sizeX = 0;
+#	sizeY = 0;
+#	size = 0;
+#
+#	srand();
+##ID = serverPort;
+#	ID = 20;
+#	
+#	start();
+#}
 
-function generate(   i) {
-	size = sizeX * sizeY; # Размер лабиринта (количество ячеек)
 
-	generateMaze(sizeX,sizeY);
+function replaceMod(mod, i) {
+	mods[mod] = getFreeCell();
+}
 
-	amountFruits = int(size / 10);
-	amountTraps = int(size / 15);
-	generateMods(amountFruits + amountTraps);
-	
+function randCell() {
+	return int((size - 1) * rand());  
+}
+
+function getFreeCell( r,rep,i) {
+	rep = 1;
+
+	while(rep) {
+		rep = 0;
+		r = randCell();
+
+		for(i = 0; i < amountFruits + amountTraps; i++) {
+			if(mods[i] == r) {
+				rep = 1;
+				break;
+			}
+		}
+		for(i = 0; i < amountUsers; i++) {
+			if(users[i][0] == r) {
+				rep = 1;
+				break;
+			}
+		}
+	}
+	return r;
+}
+
+function move(id,direction) {
+	switch(direction) {
+		case 0:
+			goUp(id);
+			break;
+		case 1:
+			goRight(id);
+			break;
+		case 2:
+			goDown(id);
+			break;
+		case 3:
+			goLeft(id);
+			break;
+	}
+}
+
+function goRight(id, newCell) {
+	newCell = users[id][0] + 1;
+	if(!rightBound[users[id][0]])
+		goToCell(newCell,id);
+}
+
+function goLeft(id, newCell) {
+	newCell = users[id][0] - 1;
+	if((users[id][0] % sizeX)&&(!rightBound[newCell]))
+		goToCell(newCell,id);
+}
+
+function goUp(id, newCell) {
+	newCell = users[id][0] - sizeX;
+	if((newCell >= 0) && (!bottomBound[newCell])) goToCell();
+		goToCell(newCell,id);
+}
+
+function goDown( newCell) {
+	newCell = users[id][0] + sizeX;
+	if(!bottomBound[newCell])
+		goToCell(newCell,id);
+}
+
+function goToCell(cell,id, i) {
+	for(i = 0; i < amountFruits + amountTraps; i++) {
+		if(mods[i] == cell) {
+			if(i < amountFruits) {
+				users[id][1] += HEAL;
+				if(users[id][1] >= MAXHP) {
+					users[id][1] = MAXHP;
+				}
+			} else {
+				users[id][1] -= int(DTRAPS + DRAND * rand());
+				if(users[id][1] <= 0) {
+					dead(id);
+					mods[i] = getFreeCell();
+					return;
+				}
+			}
+			
+			users[id][0] = cell;
+			mods[i] = getFreeCell();
+			return;
+		}
+	}
+
+	for(i = 0; i < amountUsers; i++) {
+		if(users[i][0] == cell) {
+			attack(i);
+			return;
+		}
+	}
+
+	users[id][0] = cell;
+}
+
+function attack( user) {
+	users[user][1] -= int(DAMAGE + DRAND * rand());
+	if(users[user][1] <= 0) {
+		dead(user);
+	}
+}
+
+function dead( user) {
+	users[user][0] = getFreeCell();
+	users[user][1] = STARTHP;
 }
 
 function generateMaze(sizeX,sizeY) {
@@ -397,33 +577,9 @@ function generateMaze(sizeX,sizeY) {
 		}
 	}
 	for(i = 0; i < size; i++){
-		bounds[i] = rightBound[i] + 2 * bottomBound[i];
-		print(bounds[i]) >> OUT;
-	}
-	close(OUT);
-	ORS="\n";
-}
-
-function generateMods(amount,  i,j,r,rep) {
-	for(i = 0; i < amount; i++) {
-		rep = 1;
-		mods[i] = size + 1;
-
-		while(rep) {
-			rep = 0;
-			r = randCell();
-
-			for(j = 0; j < i; j++) {
-				if(mods[j] == r) {
-					rep = 1;
-					break;
-				}
-			}
-		}
-		mods[i] = r;
+		maze[i] = rightBound[i] + 2 * bottomBound[i];
 	}
 }
-
 
 function union(set1,set2) {
 	# Объединение множеств
@@ -433,137 +589,3 @@ function union(set1,set2) {
 		}
 	}
 }
-
-function randCell() {
-	return int((size - 1) * rand());  
-}
-#BEGIN {
-#	amountUsers = 0;
-#
-#	STARTHP = 100;
-#	MAXHP = 150;
-#
-#	DRAND = 10;
-#	DAMAGE = 10;
-#	DTRAPS = 20;
-#	HEAL = 25;
-#
-#	clientPort = ARGV[1];
-#
-#	OFS = "";
-#	MAZE = "maze";
-#	DATA = "data";
-#
-#	sizeX = 0;
-#	sizeY = 0;
-#	size = 0;
-#
-#	srand();
-##ID = serverPort;
-#	ID = 20;
-#	
-#	start();
-#}
-
-
-function replaceMod(mod, i) {
-	mods[mod] = getFreeCell();
-}
-
-function randCell() {
-	return int((size - 1) * rand());  
-}
-
-function getFreeCell( r,rep,i) {
-	rep = 1;
-
-	while(rep) {
-		rep = 0;
-		r = randCell();
-
-		for(i = 0; i < amountFruits + amountTraps; i++) {
-			if(mods[i] == r) {
-				rep = 1;
-				break;
-			}
-		}
-		for(i = 0; i < amountUsers; i++) {
-			if(users[i][1] == r) {
-				rep = 1;
-				break;
-			}
-		}
-	}
-	return r;
-}
-
-function goRight( newCell) {
-	newCell = users[thisUser][1] + 1;
-	if(!rightBound[users[thisUser][1]])
-		goToCell(newCell);
-}
-
-function goLeft( newCell) {
-	if((users[thisUser][1] % sizeX)&&(!rightBound[users[thisUser][1] - 1]))
-	newCell = users[thisUser][1] - 1;
-		goToCell(newCell);
-}
-
-function goUp( newCell) {
-	newCell = users[thisUser][1] - sizeX;
-	if((newCell >= 0) && (!bottomBound[newCell])) goToCell();
-		goToCell(newCell);
-}
-
-function goDown( newCell) {
-	newCell = users[thisUser][1] + sizeX;
-	if(!bottomBound[newCell])
-		goToCell(newCell);
-}
-
-function goToCell(cell, i) {
-	for(i = 0; i < amountFruits + amountTraps; i++) {
-		if(mods[i] == cell) {
-			if(i < amountFruits) {
-				users[thisUser][2] += HEAL;
-				if(users[thisUser][2] >= MAXHP) {
-					users[thisUser][2] = MAXHP;
-				}
-			} else {
-				users[thisUser][2] -= int(DTRAPS + DRAND * rand());
-				if(users[thisUser][2] <= 0) {
-					dead(thisUser);
-					mods[i] = getFreeCell();
-					return;
-				}
-			}
-			
-			users[thisUser][1] = cell;
-			mods[i] = getFreeCell();
-			return;
-		}
-	}
-
-	for(i = 0; i < amountUsers; i++) {
-		if(users[i][1] == cell) {
-			attack(i);
-			return;
-		}
-	}
-
-	users[thisUser][1] = cell;
-}
-
-function attack( user) {
-	users[user][2] -= int(DAMAGE + DRAND * rand());
-	if(users[user][2] <= 0) {
-		dead(user);
-	}
-}
-
-function dead( user) {
-	users[user][1] = getFreeCell();
-	users[user][2] = STARTHP;
-}
-
-
