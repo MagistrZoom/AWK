@@ -103,6 +103,7 @@ function read_if_exist(host,request,err,         test_result,_RS,tmp,matches,dat
 }
 
 function ajax_post(host,err,       received,integers){
+	received = receive_content(host)
 	if(received ~ /move:\d \d+|/){
 		#TODO: parse move direction & uid
 		match(received, /mode:(\d) (\d+)/, integers)
