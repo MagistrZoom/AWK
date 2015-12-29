@@ -1,4 +1,8 @@
-#Documentation 
+#Documentation   
+
+size - size of maze(global)   
+sizeX - width   
+sizeY - height   
 
 mods[], users[] - global arrays   
 amountUsers, amountFruits, amountTraps - global var-s   
