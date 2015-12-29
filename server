@@ -110,7 +110,7 @@ function ajax_post(host,err,       received,integers){
 		
 		#see init: users, mods
 		#TODO: pack to json
-		json = tojson123(users, mods, uid) #blablabla
+		content_to_json(mods, users, integers[2], json) #blablabla
 		return json; #TODO: maze
 	}
 }
@@ -123,16 +123,18 @@ function ajax_get(host,err,   received,uid){
 					#amountUsers, amountFruits+amountTraps, size;
 		
 		#TODO: pack to json
-		json = tojson(id,users,maze,mods) #blablabla
+		json = ""
+		init_to_json(id, users, maze, mods, json)
 		return json; #TODO: maze
 	}
 	#TODO parse uid
 	if(received ~ /get_statement:\d+/){
 
 		#see init: users, mods;
-		matches(received, /get_statement:(\d+)/, uid)
-		#TODO: pack to json
-		json = tojson123(mods, users, uid[0]) #blablabla
+		match(received, /get_statement:(\d+)/, uid)
+		# TODO: pack to json
+		json = ""
+		content_to_json(mods, users, uid[0], json) #blablabla
 		return json; #TODO: maze
 	}	
 }
