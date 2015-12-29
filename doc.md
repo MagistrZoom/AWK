@@ -136,7 +136,7 @@ Move -- code of the direction
       sizeX -- width of the maze     
       sizeY -- height of the maze     
    
-2. content_to_json(mods, users, UID,   json) 
+2. content_to_json(mods, users, UID,   json)     
    Return:  json-string (format described adove).    
    Parameters:     
       mods  -- array of mobiles (traps, heals).       
@@ -153,7 +153,7 @@ Move -- code of the direction
       Discribes above.   
 
 #####Parse
-1. from_json(json,  user_state )     
+1. from_json(json,     user_state )     
    Return: array of user's state    
       user_state[1] -- UID    
       user_state[2] -- direction    
