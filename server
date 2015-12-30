@@ -1,6 +1,6 @@
 #!/usr/bin/gawk -f
 
-@include "./json"
+@include "./json.awk"
 
 END { 
 #SЕTTINGS
@@ -13,7 +13,7 @@ END {
 	
 #MAZE
 	sizeX = 40
-	sizeY = 40
+	sizeY = 20
 
 	amountUsers = 0;
 
