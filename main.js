@@ -158,7 +158,7 @@ function pageBody( maze, content ) {
       height      = maze.params.height,
       user        = content.user.pos, // scalar  
 
-      area_array  = maze.area,
+      area_array  = maze.area.slice(),
       mobs        = content.mobs;
    
 
