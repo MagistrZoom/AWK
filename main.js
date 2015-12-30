@@ -161,6 +161,7 @@ function pageBody( maze, content ) {
       area_array  = maze.area,
       mobs        = content.mobs;
    
+  console.log( user );
 
   var wb, we, hb, he,
       BLOCKW = 40, BLOCKH = 20;
@@ -200,7 +201,6 @@ function pageBody( maze, content ) {
      }
    }
   area_array[user] = area_array[user]%10 + 40;
-  console.log( user );
   for( j = 0; j < height;  j++) {
       var str1="",str2="", tmp_str1="", tmp_str2="";
       for( i = 0; i < width; i++) {
@@ -260,7 +260,10 @@ function addEvents() {
          default : return;
        }
        sendMove( move, function() { 
-         var content = JSON.parse(this);
+         var json = this;
+         console.log(json);
+         var content = JSON.parse(json);
+         console.log(content);
          changePageState( content );
        });
    });
