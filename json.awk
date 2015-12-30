@@ -94,7 +94,7 @@ function maze_to_json(maze ) {
    return json
 }
 
-#Use global: amountUser
+#Use global: amountUsers
 function content_to_json(mods, users, UID ) {
 
 
@@ -106,7 +106,13 @@ function content_to_json(mods, users, UID ) {
    juser = ""
    jtraps = ""
    jheals = ""
-   
+  
+   print "\n1: " amountUsers "\n"
+   print "2: " amountFruits "\n"
+   print "3: " amountTraps "\n"
+   print "4: " amountUsers "\n"
+
+
    for( i = 0; i < amountUsers; i++){
       if( i == UID) {
          juser = sprintf(template_user, i, users[i][1], users[i][0])

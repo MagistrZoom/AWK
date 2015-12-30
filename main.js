@@ -12,14 +12,17 @@ var session;
 //============ Begin of network space    =================
 function load_page() {
    try {
-      sendInit( function() {
-         var init = JSON.parse(this);                               
-         var maze = JSON.parse(init.maze);
-         var content = JSON.parse(init.content);
-         session = new SessionProperties( content.user.ID, maze );
-         initFrames( content ); 
-      }); 
-      
+      if( session === undefined ) {
+            console.log( "Ugly" );
+            sendInit( function() {
+            var init = JSON.parse(this);                               
+            var maze = JSON.parse(init.maze);
+            var content = JSON.parse(init.content);
+            session = new SessionProperties( content.user.ID, maze );
+            initFrames( content ); 
+            
+         }); 
+      }
    }
    catch( err ) {
       printErrorPage( err.message + "  in load_page()");
@@ -45,7 +48,7 @@ function getXmlHttp(){
 
 function sendInit( callback ) {
    var req = getXmlHttp(); 
-   req.onreadystatechange = function() {
+   req.onreaystatechange = function() {
       if( req.readyState == 4 ){
          callback.call( req.responseText );
       }
@@ -61,7 +64,7 @@ function sendMove( move ) {
    };
    req.open( 'POST', true);
    req.setRequestHeader( "Content-type", "application/json");
-   req.send('/move:' + move + " " +session.UID + '\r\n\r\n');
+   req.send('/move:' + move + session.UID + '\r\n\r\n');
 
 }
 
