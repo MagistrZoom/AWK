@@ -18,6 +18,7 @@ function load_page() {
          var content = JSON.parse(init.content);
          session = new SessionProperties( content.user.ID, maze );
          initFrames( content ); 
+	     getState();
       }); 
       
    }
@@ -88,7 +89,6 @@ function initFrames( content ) {
       printHeader( content.user );
       pageBody( session.maze, content  );
       addEvents();
-	  getState();
    }
    catch( err ){
       printErrorPage( err.message + " in initFrames()");
