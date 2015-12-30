@@ -23,8 +23,8 @@ END {
 	DAMAGE = 10;
 	DTRAPS = 20;
 	HEAL = 25;
-
 #END OF SETTINGS
+
 	srand() #4 maze
 	generate()
 
@@ -102,19 +102,20 @@ function read_if_exist(host,request,err,         test_result,_RS,tmp,matches,dat
 	return tmp
 }
 
-function ajax_post(host,err,       received){
-	if(received ~ /move:\d+/){
+function ajax_post(host,err,       received,integers){
+	received = receive_content(host)
+	if(received ~ /move:\d \d+|/){
 		#TODO: parse move direction & uid
-		move(uid, direction)
+		match(received, /mode:(\d) (\d+)/, integers)
+		move(integers[2], integers[1])
 		
 		#see init: users, mods
-
 		#TODO: pack to json
-		json = tojson123(users, mods, uid) #blablabla
+		content_to_json(mods, users, integers[2], json) #blablabla
 		return json; #TODO: maze
 	}
 }
-function ajax_get(host,err,   received){
+function ajax_get(host,err,   received,uid){
 	received = receive_content(host)
 	if(recevied == 	"init"){
 		id = make_UID()
@@ -123,16 +124,18 @@ function ajax_get(host,err,   received){
 					#amountUsers, amountFruits+amountTraps, size;
 		
 		#TODO: pack to json
-		json = tojson(id,users,maze,mods) #blablabla
+		json = ""
+		init_to_json(id, users, maze, mods, json)
 		return json; #TODO: maze
 	}
 	#TODO parse uid
 	if(received ~ /get_statement:\d+/){
 
 		#see init: users, mods;
-
-		#TODO: pack to json
-		json = tojson123(mods, users, uid) #blablabla
+		match(received, /get_statement:(\d+)/, uid)
+		# TODO: pack to json
+		json = ""
+		content_to_json(mods, users, uid[1], json) #blablabla
 		return json; #TODO: maze
 	}	
 }
