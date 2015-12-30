@@ -1,40 +1,33 @@
-<script>
-document.addEventListener("DOMContentLoaded", function(){
-	var req =getXmlHttp();
-
-	req.onreadystatechange = function(){
-		if(req.readyState == 4){
-			console.log(req.responseText);
-		}
-	}
-
-	
-	req.open('POST', '/ajax', true); 
-	req.send("fuckup\r\n\r\n");
-	setTimeout(function(){
-		req.open('POST', '/ajax', true); 
-		req.send("fuckup twice\r\n\r\n");
-	},2000);
-});
-function getXmlHttp(){
-  var xmlhttp;
-  try {
-    xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
-  } catch (e) {
-    try {
-      xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-    } catch (E) {
-      xmlhttp = false;
-    }
-  }
-  if (!xmlhttp && typeof XMLHttpRequest!='undefined') {
-    xmlhttp = new XMLHttpRequest();
-  }
-  return xmlhttp;
-}
-</script>
+<!DOCTYPE HTML>
 <html>
-	<body>
-	hello, nigga
-	</body>
+   <head>
+      <title> Game </title>
+      <meta charset="UTF-8">
+      <link rel="stylesheet" type="text/css" href="title_style.css"/>
+      <link rel="shortcut icon" href=""/>
+   <head>
+   <body>
+      <pre class="title"> <a  href="game.html">
+▄▀▀▀▀▄    ▄▀▀█▄   ▄▀▀▄ ▄▀▄  ▄▀▀█▄▄▄▄     
+█         ▐ ▄▀ ▀▄ █  █ ▀  █ ▐  ▄▀   ▐     
+█    ▀▄▄    █▄▄▄█ ▐  █    █   █▄▄▄▄▄      
+█     █ █  ▄▀   █   █    █    █    ▌      
+▐▀▄▄▄▄▀ ▐ █   ▄▀  ▄▀   ▄▀    ▄▀▄▄▄▄       
+▐         ▐   ▐   █    █     █    ▐       
+                  ▐    ▐     ▐            </a>
+      </pre>
+      <pre style="text-align: left;margin: 100px;font-size:130%">
+         <span class="user">@</span> -- you.
+         <span class="heals">!</span> -- your life. Keep it.
+         <span class="traps">.</span> -- your future. Avoid it. 
+         <span class="others">W</span> -- your brothers. Kill them. 
+
+         Controls:
+         <span class="controls">&#8592</span> -- move left
+         <span class="controls">&#8593</span> -- move up
+         <span class="controls">&#8594</span> -- move right
+         <span class="controls">&#8595</span> -- move down
+      </pre>
+   </body>
+
 </html>

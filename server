@@ -51,6 +51,7 @@ END {
 		}
 		content_length = length(content)
 		answer_headers = make_a_headers(content_length)	
+      print content
 		print answer_headers ORS content |& host
 		close(host)
 	}
@@ -81,7 +82,7 @@ function read_if_exist(host,request,err,         test_result,_RS,tmp,matches,dat
 	matches = match(request, /ajax_get/);
 	if(matches != 0){
 		#return datafile to user
-		datafile = ajax_get(host)
+		datafile = ajax_get(request)
 		err[1] = 2
 		RS = _RS
 		return datafile
@@ -106,20 +107,20 @@ function ajax_post(host,err,       received,integers){
 	received = receive_content(host)
 	if(received ~ /move:\d \d+|/){
 		#TODO: parse move direction & uid
-		match(received, /mode:(\d) (\d+)/, integers)
+		match(received, /move:(\d) (\d+)/, integers)
 		move(integers[2], integers[1])
 		
 		#see init: users, mods
 		#TODO: pack to json
-		json = content_to_json(mods, users, integers[2]) #blablabla
+     	print integers[2]
+		json = content_to_json(mods, users, integers[2]) 
 		return json; #TODO: maze
 	}
 }
-function ajax_get(host,err,   received,uid){
-	received = receive_content(host)
-	if(recevied == 	"init"){
+function ajax_get(request,err,   received,uid){
+	#received = receive_content(host)
+	if(request ~ "init"){
 		id = make_UID()
-
 		#users, mods, maze - global;
 					#amountUsers, amountFruits+amountTraps, size;
 		
@@ -133,7 +134,7 @@ function ajax_get(host,err,   received,uid){
 		#see init: users, mods;
 		match(received, /get_statement:(\d+)/, uid)
 		# TODO: pack to json
-		json = content_to_json(mods, users, uid[1]) #blablabla
+		json = content_to_json(mods, users, uid[1]) 
 		return json; #TODO: maze
 	}	
 }
@@ -143,7 +144,8 @@ function receive_http(headers, host,      str,tmp,matches){
 			break
 		matches	= match(str, "^([^:]*): (.*)$", tmp)
 		if(matches == 0){
-			matches =	match(str, /^([^ ]*) \/(([^. ]*)(\.html|\.css|\.js|\.db)?) HTTP\/1\.1$/, tmp)
+			matches =	match(str, /^([^ ]*) \/(([^. ]*)(\.html|\.css|\.js|\.db|\.ico)?) HTTP\/1\.1$/, tmp)
+        
 			if(tmp[4] == "")
 				tmp[2] = tmp[3] "index.html"
 			if(matches == 0){
@@ -157,6 +159,7 @@ function receive_http(headers, host,      str,tmp,matches){
 function receive_content(host, 		info,str){
 	info = ""
 	while(host |& getline str){
+      print str
 		if (str == "")
 			break
 		info = info str

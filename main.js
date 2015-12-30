@@ -1,44 +1,30 @@
 //============ Begin of global-object space =================
 
-function SessionProperties( user, maze ) {
-   this.user = user;
+function SessionProperties( UID, maze ) {
+   this.UID = UID;
    this.maze = maze;
 }
-
 /* Have to be created in the network space. */
 var session; 
 
 //============ End of global-object space    =================
 
-
-
 //============ Begin of network space    =================
-window.onload = function () {
+function load_page() {
    try {
-      //TODO: Change json - players, escape-sequence 
       sendInit( function() {
          var init = JSON.parse(this);                               
          var maze = JSON.parse(init.maze);
-         var content = JSON.parse(inti.content);
-         session = new SessionProperties( content.user, maze ):
+         var content = JSON.parse(init.content);
+         session = new SessionProperties( content.user.ID, maze );
          initFrames( content ); 
       }); 
       
    }
    catch( err ) {
-      printErrorPage( "Cannot load from server." );
+      printErrorPage( err.message + "  in load_page()");
    }
 }; 
-
-function sendInit( callback ) {
-   var req = getXmlHttp(); 
-   req.onreadychange = function() {
-      if( req.readyState == 4 )
-         callback.call( req.responseText );
-   };
-   req.open( "GET", "/init", true );
-   req.send();
-}
 
 function getXmlHttp(){
   var xmlhttp;
@@ -57,19 +43,37 @@ function getXmlHttp(){
   return xmlhttp;
 }
 
-function sendMove( json ) {
+function sendInit( callback ) {
+   var req = getXmlHttp(); 
+   req.onreadystatechange = function() {
+      if( req.readyState == 4 ){
+         callback.call( req.responseText );
+      }
+   };
+   req.open( "GET", "/ajax_get/init", true );
+   req.send();
+}
+
+function sendMove( move ) {
    var req = getXmlHttp();
-   req.open( 'POST', '/move', true);
+   req.onreadychange = function() {
+      callback.call( req.responseText );        
+   };
+   req.open( 'POST', true);
    req.setRequestHeader( "Content-type", "application/json");
-   req.send(json+"\r\n\r\n");
-   console.log(req.responseText);
+   req.send('/move:' + move + " " +session.UID + '\r\n\r\n');
 
 }
 
-/* Update under timeout. */
-function update( ) {
-
+/* Update under timeout for multiplayer mode. */
+function getState( ) {
+   var req = getXmlHttp();
+   req.onreadychange = function() {
+      
+   };
+   req.open( 'GET', '/ajax_get/get_statement:'+ session.UID, true);
 }
+
 //============ End of network space =================
 
 //============ Begin of face-making =================
@@ -78,13 +82,24 @@ function initFrames( content ) {
 
    try{
       pageHeader( content.user );
-      pageBody( session.maze, mobs );
+      pageBody( session.maze, content  );
       addEvents();
    }
    catch( err ){
-      printErrorPage( "Cannot generate the page" );
+      printErrorPage( err.message + " in initFrames()");
    }
 }
+
+function changePageState( content ) {
+   try{
+      pageHeader( content.user );
+      pageBody( session.maze, content );
+   }
+   catch( err ) {
+      printErrorPage( err.message + " in changePageState" );
+   }
+}
+
 
 function pageHeader( user ) {
   var html = document.getElementById("header");
@@ -94,12 +109,11 @@ function pageHeader( user ) {
             return names[Math.floor(Math.random()*(names.length))];
   })();
 
-  var userHP   = user.health;
   var newHTML  = str.replace(/@/, userName );
-
   newHTML = newHTML.replace(/\+/, function(match){ 
-            var hp= "o"; 
-            for( i = 0 ; i < userHP-1 ; i++ ) hp += "o";      
+         var hp= ""; 
+         for( i = 0, HP =  user.health/2; i < HP ; i++ ) 
+               hp += "o";      
          return hp;
   });
   html.innerHTML = newHTML;
@@ -124,18 +138,22 @@ function pageHeader( user ) {
  *    40 -- main-user    "@"            
  */
 
-function pageBody( maze, mobs ) {
+function pageBody( maze, content ) {
   
 
-  var width       = maze.params.width;
-  var height      = maze.params.height;
-  var user        = session.user.pos; // scalar  
-  var area_array  = maze.area;
-  var wb, we, hb, he;  
-  var BLOCKW = 40, BLOCKH = 20;
+  var width       = maze.params.width,
+      height      = maze.params.height,
+      user        = content.user.pos, // scalar  
+
+      area_array  = maze.area,
+      mobs        = content.mobs;
+   
+
+  var wb, we, hb, he,
+      BLOCKW = 40, BLOCKH = 20;
   
-  var ph = Math.ceil( user / BLOCKW )-1; 
-  var pw = user - ph*BLOCKW; 
+  var ph = Math.ceil( user / BLOCKW )-1,
+      pw = user - ph*BLOCKW; 
    
 
   if( (width - pw) < BLOCKW ) { we = width-1; wb = width - BLOCKW;}
@@ -153,10 +171,17 @@ function pageBody( maze, mobs ) {
                   for( i = 0; i < BLOCKW*2; i++){ str += "#"; }
                   return str + "#\n";
   })();
-  for( i = 0, len = area_array.length; i < len; i++) {
-     if( i < mobs.heals.pos.length)  { area_array[mobs.heals.pos[i]] += 10;}
-     if( i < mobs.traps.pos.length)  { area_array[mobs.traps.pos[i]] += 20;}
-     if( i < mobs.players.pos.length){ area_array[mobs.players.pos[i]] += 30; }
+
+  /* Oops. :) */
+  for( i = 0,
+     len = area_array.length,
+      hl = mobs.heals.pos.length, 
+      tl = mobs.traps.pos.length,
+      pl = mobs.players.pos.length;
+                                    i < len; i++) {
+     if( i < hl)  { area_array[mobs.heals.pos[i]]   += 10;}
+     if( i < tl)  { area_array[mobs.traps.pos[i]]   += 20;}
+     if( i < pl)  { area_array[mobs.players.pos[i]] += 30;}
    }
   area_array[user] += 40;
   
@@ -207,18 +232,21 @@ function printErrorPage( message ) {
 
 //============ End of face-making =================
 
-
 //============ Events =================
 function addEvents() {
    document.addEventListener( 'keydown', function(event) {
+      var move;
       switch( event.keyCode ) {
-         case  38 : sendMove(JSON.stringify(0)); break;
-         case  39 : sendMove(JSON.stringify(1)); break;
-         case  40 : sendMobe(JSON.stringify(2)); break;
-         case  37 : sendMobe(JSON.stringify(3)); break;
+         case  38 : move = 0; break;
+         case  39 : move = 1; break;
+         case  40 : move = 2; break;
+         case  37 : move = 3; break;
          default : return;
        }
+       sendMove( move, function() { 
+         var content = JSON.parse(this);
+         console.log( content );
+         changePageState( content );
+       });
    });
 }
-
-
