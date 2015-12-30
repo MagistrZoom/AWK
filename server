@@ -30,6 +30,7 @@ END {
 	generate()
 	while(1){
 		headers["POST"] = ""
+		headers["GET"] = ""
 		receive_http(headers, host)
 		err[0] = 0
 		print "\""heders["GET"]"\" \""headers["POST"]"\""
