@@ -59,9 +59,8 @@ function sendMove( move, callback ) {
    req.onreadystatechange = function() {
       callback.call( req.responseText );        
    };
-   req.open( 'POST', "/ajax_post/move.db", true);
-   req.setRequestHeader( "Content-type", "application/json");
-   req.send('move:' + move + "_" +session.UID +".db" +'\r\n\r\n');
+   req.open( "POST", "/ajax_post/move.db", true);
+   req.send("move:" + move + "_" +session.UID +".db" +"\r\n\r\n");
 
 }
 
@@ -71,7 +70,7 @@ function getState( ) {
    req.onreadychange = function() {
       
    };
-   req.open( 'GET', '/ajax_get/get_statement:'+ session.UID +'.db', true);
+   req.open( 'GET' + '/ajax_get/get_statement:'+ session.UID +'.db', true);
 }
 
 //============ End of network space =================
