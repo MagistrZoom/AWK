@@ -158,11 +158,11 @@ function pageBody( maze, content ) {
       height      = maze.params.height,
       user        = content.user.pos, // scalar  
 
-      area_array  = maze.area,
+      area_array  = maze.area.slice(),
       mobs        = content.mobs;
    
   console.log( user );
-
+  console.log( maze );
   var wb, we, hb, he,
       BLOCKW = 40, BLOCKH = 20;
   
@@ -261,7 +261,6 @@ function addEvents() {
        }
        sendMove( move, function() { 
          var json = this;
-         console.log(json);
          var content = JSON.parse(json);
          console.log(content);
          changePageState( content );
