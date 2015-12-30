@@ -41,7 +41,7 @@ get_statement:UID
   UID - integer
 
 ###AJAX POST Requests
-move:DIRECTION UID
+move:DIRECTION_UID
   DIRECTION: 0 to 3 NESW
   UID: integer
 =======
