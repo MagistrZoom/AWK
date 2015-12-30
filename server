@@ -1,4 +1,4 @@
-#!/usr/bin/awk -f
+#!/usr/bin/gawk -f
 
 @include "./json"
 
@@ -272,13 +272,13 @@ function goLeft(id, newCell) {
 
 function goUp(id, newCell) {
 	newCell = users[id][0] - sizeX;
-	if((newCell >= 0) && (!bottomBound[newCell])) goToCell();
+	if((newCell >= 0) && (!bottomBound[newCell]))
 		goToCell(newCell,id);
 }
 
 function goDown(id, newCell) {
 	newCell = users[id][0] + sizeX;
-	if(!bottomBound[newCell])
+	if(!bottomBound[users[id][0]])
 		goToCell(newCell,id);
 }
 
@@ -315,14 +315,14 @@ function goToCell(cell,id, i) {
 	users[id][0] = cell;
 }
 
-function attack( user) {
+function attack(user) {
 	users[user][1] -= int(DAMAGE + DRAND * rand());
 	if(users[user][1] <= 0) {
 		dead(user);
 	}
 }
 
-function dead( user) {
+function dead(user) {
 	users[user][0] = getFreeCell();
 	users[user][1] = STARTHP;
 }
