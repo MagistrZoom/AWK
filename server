@@ -1,4 +1,4 @@
-#!/usr/bin/gawk -f
+#!/usr/bin/awk -f
 
 @include "./json"
 
@@ -6,7 +6,8 @@ END {
 #SЕTTINGS
 
 	_RS = RS
-	RS = ORS = "\r\n"
+	RS = "\r\n"
+	ORS = "\r\n"
 	port = 1488
 	host = "/inet/tcp/" port "/0/0"  # host string 
 	
@@ -27,23 +28,22 @@ END {
 
 	srand() #4 maze
 	generate()
-
 	while(1){
 		receive_http(headers, host)
 		err[0] = 0
 		if(headers["GET"] != ""){	
 			content = read_if_exist(host,headers["GET"],err)
 			if(err[1] == 1){
-				print "HTTP/1.1 404 Not Found" |& host
+				print "HTTP/1.1 404 Not Found" ORS ORS|& host
 				close (host)
 				continue
 #	terminate(host, 2, "Invalid filename")
 			}	
-		}
+		} 
 		if(headers["POST"] != ""){
 			content = ajax_post(host,err)	
 			if(err[1] == 1){
-				print "HTTP/1.1 404 Not Found" |& host
+				print "HTTP/1.1 404 Not Found" ORS ORS|& host
 				close (host)
 				continue
 #	terminate(host, 2, "Invalid filename")
@@ -51,27 +51,25 @@ END {
 		}
 		content_length = length(content)
 		answer_headers = make_a_headers(content_length)	
-#print "Answer to client:"
-#print content
-		print answer_headers ORS content |& host
+		print answer_headers ORS ORS content |& host
 		close(host)
 	}
 	terminate(host, 3, "Lyl, how?")
 } 
 
 function make_a_headers(content_length,    headers){
+	ORS = "\r\n"
 	headers = "HTTP/1.1 200 OK" ORS
 	headers = headers "Server: gawk-based sh~ made by izoomko" ORS
-	headers = headers "Content-length" content_length
-	headers = headers "Connection: Keep-Alive" ORS
-	"Content-Type: text/html" ORS
-	"Content-Language: en" ORS
+	headers = headers "Content-length:" content_length ORS
+	headers = headers "Connection: keep-alive"
+	return headers
 }
 
 function read_if_exist(host,request,err,         test_result,_RS,tmp,matches,datafile){
 	_RS = RS
 	RS = "\n"
-	
+
 	# goto :hell, scriptkiddy!
 	matches = match(request, /\.\.\//)
 	if(matches != 0){
@@ -106,10 +104,10 @@ function read_if_exist(host,request,err,         test_result,_RS,tmp,matches,dat
 
 function ajax_post(host,err,       received,integers){
 	received = receive_content(host)
-	print "AJAX POST req: "  received "\n"
-	if(received ~ /move:\d_\d+|/){
+	print "AJAX POST rec:" received
+	if(received ~ /move:[0-9]_[0-9]+\.db/){
 		#TODO: parse move direction & uid
-		match(received, /move:(\d) (\d+)/, integers)
+		match(received, /move:([0-9])_([0-9]+)\.db/, integers)
 		move(integers[2], integers[1])
 		#see init: users, mods
 		#TODO: pack to json
@@ -119,10 +117,10 @@ function ajax_post(host,err,       received,integers){
 		return json; #TODO: maze
 	}
 }
-function ajax_get(request,err,   received,uid){
-	print "AJAX GET req: " request "\n"
+function ajax_get(request,err,   id,json,uid){
+	print "AJAX GET req: " request
 	#received = receive_content(host)
-	if(request ~ "init"){
+	if(request ~ /init\.db/){
 		id = make_UID()
 		#users, mods, maze - global;
 					#amountUsers, amountFruits+amountTraps, size;
@@ -132,10 +130,10 @@ function ajax_get(request,err,   received,uid){
 		return json; #TODO: maze
 	}
 	#TODO parse uid
-	if(received ~ /get_statement:\d+/){
+	if(request ~ /get_statement:[0-9]+\.db/){
 
 		#see init: users, mods;
-		match(received, /get_statement:(\d+)/, uid)
+		match(request, /get_statement:([0-9]+)\.db/, uid)
 		# TODO: pack to json
 		json = content_to_json(mods, users, uid[1]) 
 		return json; #TODO: maze
@@ -145,7 +143,7 @@ function receive_http(headers, host,      str,tmp,matches){
 	while(host |& getline str){
 		if (str == "")
 			break
-		matches	= match(str, "^([^:]*): (.*)$", tmp)
+		matches	= match(str, /^([^:]*): (.*)$/, tmp)
 		if(matches == 0){
 			matches =	match(str, /^([^ ]*) \/(([^. ]*)(\.html|\.css|\.js|\.db)?) HTTP\/1\.1$/, tmp)
 			if(tmp[4] == "")

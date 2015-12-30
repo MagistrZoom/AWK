@@ -59,9 +59,9 @@ function sendMove( move, callback ) {
    req.onreadystatechange = function() {
       callback.call( req.responseText );        
    };
-   req.open( 'POST', true);
+   req.open( 'POST', "/ajax_post/move.db", true);
    req.setRequestHeader( "Content-type", "application/json");
-   req.send('/move:' + move + "_" +session.UID +".db" +'\r\n\r\n');
+   req.send('move:' + move + "_" +session.UID +".db" +'\r\n\r\n');
 
 }
 
