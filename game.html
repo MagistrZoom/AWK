@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+   <meta charset="UTF-8"/> 
+   <head> 
+      <title> Game </title>
+       <script src="main.js" type="text/javascript"> </script>
+      <link rel="shortcut icon" href=""/>
+       <style> 
+         body {
+            background-color: black;            
+            color           : #0000FF;
+         }
+         pre {
+            margin  : 1px; 
+         }
+         .header {
+            color    : #DF01D7;
+            font-size: 110%;
+         }
+         .maze {
+            color    : #0000FF;
+            font-size: 95%;
+         }
+         .traps {
+            color : white;
+         }
+         .heals {
+            color : green;
+         }
+         .players {
+            color : red;
+         }
+         .user {
+            color : yellow;
+         }
+       </style>
+   </head>
+   <body onload="load_page();"> 
+      <pre id="header" class="header">
+ User   : @ 
+ Health : +
+      </pre>
+      <pre id="maze" class="maze"></pre>
+   </body>
+</html>
+
