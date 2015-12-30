@@ -82,8 +82,8 @@
 
 
 
-# Use global: size, sizeX, sizeY 
-function maze_to_json(maze,    json) {
+# Use global: size, sizeX, sizeY. Return: json
+function maze_to_json(maze) {
 
    old_delim = FS
    FS=" "
@@ -99,8 +99,8 @@ function maze_to_json(maze,    json) {
    return json
 }
 
-#Use global: amountUser
-function content_to_json(mods, users, UID,   json) {
+#Use global: amountUser. Return: json
+function content_to_json(mods, users, UID) {
  
    old_delim = FS
    FS = " "
