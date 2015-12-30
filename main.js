@@ -57,7 +57,6 @@ function sendInit( callback ) {
 function sendMove( move, callback ) {
    var req = getXmlHttp();
    req.onreadystatechange = function() {
-      console.log( req.responseText );
       callback.call( req.responseText );        
    };
    req.open( 'POST', "/ajax_post/move.db", true);
@@ -94,7 +93,6 @@ function initFrames( content ) {
 function changePageState( content ) {
    try{
       printState( content.user );
-      console.log( "state printed" );
       pageBody( session.maze, content );
    }
    catch( err ) {
@@ -105,13 +103,15 @@ function changePageState( content ) {
 function printState( user ) {
    var html = document.getElementById("header"),
        str  = html.innerHTML;
-   html.innerHTML = str.replace(/(?:Health: )o*/, function(match){ 
+   
+   // TODO: regexp and count: user.health/2
+   html.innerHTML = str.replace(/o+/, function(match){ 
          var hp= ""; 
          for( i = 0, HP =  2; i < HP ; i++ ) 
                hp += "o";      
          return hp;
   });
-
+  
 }
 
 function printHeader( user ) {
@@ -167,16 +167,14 @@ function pageBody( maze, content ) {
   
   var ph = Math.ceil( user / BLOCKW )-1,
       pw = user - ph*BLOCKW; 
-
   if( (width - pw) < BLOCKW ) { we = width-1; wb = width - BLOCKW;}
   else if( pw < BLOCKW ) { wb = 0; we = BLOCKW-1;}
-//  else if((pw < 0) || (pw > width) ) { throw new Error( "print maze error" ); }
+  else if((pw < 0) || (pw > width) ) { throw new Error( "print maze error" ); }
   else { wb = pw-BLOCKW*Math.floor(pw/BLOCKW); we = wb + BLOCKW-1;}
   if( (height - ph) < BLOCKH ) { he = height-1; hb = height - BLOCKH-1;}
   else if( ph < BLOCKH ) { hb = 0; he = BLOCKH-1;}
-//  else if((ph < 0) || (ph > hight)) { throw new Error("print maze error"); }
+  else if((ph < 0) || (ph > height)) { throw new Error("print maze error"); }
   else { hb = ph-BLOCKH*Math.floor(ph/BLOCKH); he = hb + BLOCKH-1;}
-
 
   var area_string = ( function getLine() {
                   var str = "";
@@ -191,12 +189,18 @@ function pageBody( maze, content ) {
       tl = mobs.traps.pos.length,
       pl = mobs.players.pos.length;
                                     i < len; i++) {
-     if( i < hl)  { area_array[mobs.heals.pos[i]]   += 10;}
-     if( i < tl)  { area_array[mobs.traps.pos[i]]   += 20;}
-     if( i < pl && mobs.players.pos[i] >= 0)  { area_array[mobs.players.pos[i]] += 30;}
+     if( i < hl) { 
+         area_array[mobs.heals.pos[i]] = area_array[mobs.heals.pos[i]]%10+10;
+     }
+     if( i < tl) { 
+         area_array[mobs.traps.pos[i]] = area_array[mobs.traps.pos[i]]%10+10;
+     }  
+     if( i < pl && mobs.players.pos[i] >= 0){ 
+         area_array[mobs.players.pos[i]] = area_array[mobs.players.pos[i]]%10+30;
+     }
    }
-  area_array[user] += 40;
-  
+  area_array[user] = area_array[user]%10 + 40;
+  console.log( user );
   for( j = 0; j < height;  j++) {
       var str1="",str2="", tmp_str1="", tmp_str2="";
       for( i = 0; i < width; i++) {
@@ -229,7 +233,7 @@ function pageBody( maze, content ) {
       }
       if((j<=he)&&(j>=hb)) area_string += "#" + tmp_str1+"\n#"+tmp_str2+"\n";
   }
-
+   
   area_string = area_string.replace(/@/g, "<span class=\"user\">@</span>");
   area_string = area_string.replace(/!/g, "<span class=\"heals\">!</span>");
   area_string = area_string.replace(/\./g, "<span class=\"traps\">.</span>");
@@ -257,7 +261,6 @@ function addEvents() {
        }
        sendMove( move, function() { 
          var content = JSON.parse(this);
-         console.log( content );
          changePageState( content );
        });
    });
