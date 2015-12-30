@@ -105,9 +105,9 @@ function printState( user ) {
        str  = html.innerHTML;
    
    // TODO: regexp and count: user.health/2
-   html.innerHTML = str.replace(/o+/, function(match){ 
-         var hp= ""; 
-         for( i = 0, HP =  2; i < HP ; i++ ) 
+   html.innerHTML = str.replace(/: o+/, function(match){ 
+         var hp= ": "; 
+         for( i = 0, HP =  user.health; i < HP/2 ; i++ ) 
                hp += "o";      
          return hp;
   });
@@ -194,7 +194,7 @@ function pageBody( maze, content ) {
          area_array[mobs.heals.pos[i]] = area_array[mobs.heals.pos[i]]%10+10;
      }
      if( i < tl) { 
-         area_array[mobs.traps.pos[i]] = area_array[mobs.traps.pos[i]]%10+10;
+         area_array[mobs.traps.pos[i]] = area_array[mobs.traps.pos[i]]%10+20;
      }  
      if( i < pl && mobs.players.pos[i] >= 0){ 
          area_array[mobs.players.pos[i]] = area_array[mobs.players.pos[i]]%10+30;
