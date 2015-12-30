@@ -94,25 +94,19 @@ function maze_to_json(maze ) {
    return json
 }
 
-#Use global: amountUsers
+#Use global: amountUser
 function content_to_json(mods, users, UID ) {
 
 
    template_user = "{\"user\":{\"ID\":%d,\"health\":%d,\"pos\":%d},"
    template_mobs = "\"mobs\":{\"traps\":{\"pos\":[%s]},\"heals\":{\"pos\":[%s]},"
-   template_players = "\"players\":{\"pos\":[%s]}"
+   template_players = "\"players\":{\"pos\":[%s]}}"
 
    jplayers = ""
    juser = ""
    jtraps = ""
    jheals = ""
-  
-   print "\n1: " amountUsers "\n"
-   print "2: " amountFruits "\n"
-   print "3: " amountTraps "\n"
-   print "4: " amountUsers "\n"
-
-
+   
    for( i = 0; i < amountUsers; i++){
       if( i == UID) {
          juser = sprintf(template_user, i, users[i][1], users[i][0])
@@ -153,7 +147,7 @@ function content_to_json(mods, users, UID ) {
 function init_to_json( UID, users, maze, mods,     json){
    template_init = "{\"maze\":\"%s\",\"content\":\"%s\"}"
    maze_json = maze_to_json( maze )
-   content_json = content_to_json(mods, users, UID) "}"
+   content_json = content_to_json(mods, users, UID)
    gsub(/"/, "\\\"", content_json );
    gsub(/"/, "\\\"", maze_json );
    return sprintf(template_init, maze_json, content_json )

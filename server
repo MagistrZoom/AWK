@@ -51,6 +51,8 @@ END {
 		}
 		content_length = length(content)
 		answer_headers = make_a_headers(content_length)	
+#print "Answer to client:"
+#print content
 		print answer_headers ORS content |& host
 		close(host)
 	}
@@ -104,21 +106,22 @@ function read_if_exist(host,request,err,         test_result,_RS,tmp,matches,dat
 
 function ajax_post(host,err,       received,integers){
 	received = receive_content(host)
-	if(received ~ /move:\d \d+|/){
+	print "AJAX POST req: "  received "\n"
+	if(received ~ /move:\d_\d+|/){
 		#TODO: parse move direction & uid
 		match(received, /move:(\d) (\d+)/, integers)
 		move(integers[2], integers[1])
-		
 		#see init: users, mods
 		#TODO: pack to json
-      print integers[2]
+##print "Move UID:"
+#print integers[2]
 		json = content_to_json(mods, users, integers[2]) 
 		return json; #TODO: maze
 	}
 }
 function ajax_get(request,err,   received,uid){
+	print "AJAX GET req: " request "\n"
 	#received = receive_content(host)
-   print request
 	if(request ~ "init"){
 		id = make_UID()
 		#users, mods, maze - global;
@@ -143,23 +146,22 @@ function receive_http(headers, host,      str,tmp,matches){
 		if (str == "")
 			break
 		matches	= match(str, "^([^:]*): (.*)$", tmp)
-      print str
 		if(matches == 0){
-			matches =	match(str, /^([^ ]*) \/(([^. ]*)(\.html|\.css|\.js|\.db|\.ico)?) HTTP\/1\.1$/, tmp)
-         print "\n" tmp[1] "\n"
-			if(tmp[4] == "" && tmp[3] == "" )
-				tmp[2] = "index.html"
+			matches =	match(str, /^([^ ]*) \/(([^. ]*)(\.html|\.css|\.js|\.db)?) HTTP\/1\.1$/, tmp)
+			if(tmp[4] == "")
+				tmp[2] = tmp[3] "index.html"
 			if(matches == 0){
 				terminate(host, 1, "Wth, dude? Where is your's valid HTTP heads?");
 			}
 		}
 		headers[tmp[1]] = tmp[2]
-	}
+      }
 }
 
 function receive_content(host, 		info,str){
 	info = ""
 	while(host |& getline str){
+#print str
 		if (str == "")
 			break
 		info = info str
