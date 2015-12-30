@@ -104,7 +104,7 @@ function read_if_exist(host,request,err,         test_result,_RS,tmp,matches,dat
 
 function ajax_post(host,err,       received,integers){
 	received = receive_content(host)
-	print "AJAX POST rec:" received "\n"
+	print "AJAX POST rec:" received
 	if(received ~ /move:[0-9]_[0-9]+\.db/){
 		#TODO: parse move direction & uid
 		match(received, /move:([0-9])_([0-9]+)\.db/, integers)
@@ -119,7 +119,7 @@ function ajax_post(host,err,       received,integers){
 	}
 }
 function ajax_get(request,err,   id,json,uid){
-	print "AJAX GET req: " request "\n"
+	print "AJAX GET req: " request
 	#received = receive_content(host)
 	if(request ~ /init\.db/){
 		id = make_UID()
