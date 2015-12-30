@@ -104,12 +104,12 @@ function read_if_exist(host,request,err,         test_result,_RS,tmp,matches,dat
 
 function ajax_post(host,err,       received,integers){
 	received = receive_content(host)
+<<<<<<< HEAD
 	print "AJAX POST rec:" received
 	if(received ~ /move:[0-9]_[0-9]+\.db/){
 		#TODO: parse move direction & uid
 		match(received, /move:([0-9])_([0-9]+)\.db/, integers)
 		move(integers[2], integers[1])
-		
 		#see init: users, mods
 		#TODO: pack to json
 ##print "Move UID:"
@@ -146,7 +146,7 @@ function receive_http(headers, host,      str,tmp,matches){
 			break
 		matches	= match(str, /^([^:]*): (.*)$/, tmp)
 		if(matches == 0){
-			matches =	match(str, /^([^ ]*) \/(([^. ]*)(\.html|\.css|\.js|\.db|\.ico)?) HTTP\/1\.1$/, tmp)
+			matches =	match(str, /^([^ ]*) \/(([^. ]*)(\.html|\.css|\.js|\.db)?) HTTP\/1\.1$/, tmp)
 			if(tmp[4] == "")
 				tmp[2] = tmp[3] "index.html"
 			if(matches == 0){
@@ -154,7 +154,7 @@ function receive_http(headers, host,      str,tmp,matches){
 			}
 		}
 		headers[tmp[1]] = tmp[2]
-	}
+      }
 }
 
 function receive_content(host, 		info,str){

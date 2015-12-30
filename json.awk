@@ -100,7 +100,7 @@ function content_to_json(mods, users, UID ) {
 
    template_user = "{\"user\":{\"ID\":%d,\"health\":%d,\"pos\":%d},"
    template_mobs = "\"mobs\":{\"traps\":{\"pos\":[%s]},\"heals\":{\"pos\":[%s]},"
-   template_players = "\"players\":{\"pos\":[%s]}"
+   template_players = "\"players\":{\"pos\":[%s]}}"
 
    jplayers = ""
    juser = ""
@@ -147,7 +147,7 @@ function content_to_json(mods, users, UID ) {
 function init_to_json( UID, users, maze, mods,     json){
    template_init = "{\"maze\":\"%s\",\"content\":\"%s\"}"
    maze_json = maze_to_json( maze )
-   content_json = content_to_json(mods, users, UID) "}"
+   content_json = content_to_json(mods, users, UID)
    gsub(/"/, "\\\"", content_json );
    gsub(/"/, "\\\"", maze_json );
    return sprintf(template_init, maze_json, content_json )
