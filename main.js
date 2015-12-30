@@ -50,7 +50,7 @@ function sendInit( callback ) {
          callback.call( req.responseText );
       }
    };
-   req.open( "GET", "/ajax_get/init", true );
+   req.open( "GET", "/ajax_get/init.db", true );
    req.send();
 }
 
@@ -71,7 +71,7 @@ function getState( ) {
    req.onreadychange = function() {
       
    };
-   req.open( 'GET', '/ajax_get/get_statement:'+ session.UID, true);
+   req.open( 'GET', '/ajax_get/get_statement:'+ session.UID +'.db', true);
 }
 
 //============ End of network space =================

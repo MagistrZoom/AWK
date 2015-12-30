@@ -51,7 +51,8 @@ END {
 		}
 		content_length = length(content)
 		answer_headers = make_a_headers(content_length)	
-      print content
+#print "Answer to client:"
+#print content
 		print answer_headers ORS content |& host
 		close(host)
 	}
@@ -112,12 +113,14 @@ function ajax_post(host,err,       received,integers){
 		
 		#see init: users, mods
 		#TODO: pack to json
-     	print integers[2]
+##print "Move UID:"
+#print integers[2]
 		json = content_to_json(mods, users, integers[2]) 
 		return json; #TODO: maze
 	}
 }
 function ajax_get(request,err,   received,uid){
+	print "AJAX GET req: " request "\n"
 	#received = receive_content(host)
 	if(request ~ "init"){
 		id = make_UID()
@@ -145,7 +148,6 @@ function receive_http(headers, host,      str,tmp,matches){
 		matches	= match(str, "^([^:]*): (.*)$", tmp)
 		if(matches == 0){
 			matches =	match(str, /^([^ ]*) \/(([^. ]*)(\.html|\.css|\.js|\.db|\.ico)?) HTTP\/1\.1$/, tmp)
-        
 			if(tmp[4] == "")
 				tmp[2] = tmp[3] "index.html"
 			if(matches == 0){
@@ -159,7 +161,7 @@ function receive_http(headers, host,      str,tmp,matches){
 function receive_content(host, 		info,str){
 	info = ""
 	while(host |& getline str){
-      print str
+#print str
 		if (str == "")
 			break
 		info = info str
