@@ -65,12 +65,17 @@ function sendMove( move, callback ) {
 }
 
 /* Update under timeout for multiplayer mode. */
-function getState( ) {
+function getState() {
    var req = getXmlHttp();
-   req.onreadychange = function() {
-      
+   req.onreadystatechange = function() {
+        var content = JSON.parse(req.responseText);
+        console.log(content);
+        changePageState( content );
    };
-   req.open( 'GET' + '/ajax_get/get_statement:'+ session.UID +'.db', true);
+   setInterval(function(){
+		req.open( "GET" , "/ajax_get/get_statement:"+ session.UID +".db", true);
+   		req.send();
+   }, 2000);
 }
 
 //============ End of network space =================
@@ -83,6 +88,7 @@ function initFrames( content ) {
       printHeader( content.user );
       pageBody( session.maze, content  );
       addEvents();
+	  getState();
    }
    catch( err ){
       printErrorPage( err.message + " in initFrames()");
@@ -127,7 +133,7 @@ function printHeader( user ) {
          for( i = 0, HP =  user.health/2; i < HP ; i++ ) 
                hp += "o";      
          return hp;
-  });
+  })
   html.innerHTML = newHTML;
 }
 
