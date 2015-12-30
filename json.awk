@@ -4,7 +4,7 @@
 #    var maze = {
 #       params : {
 #          width  : <VALUE>,
-#          heigth : <VALUE>
+#          height : <VALUE>
 #       },
 #       area : [ <ARRAY> ]
 #    }; 
@@ -13,7 +13,7 @@
 #    {
 #       "params" : {
 #          "width"  : <VALUE>,
-#          "heigth" : <VALUE>
+#          "height" : <VALUE>
 #       },
 #       "area" : [ <ARRAY> ]
 #    }
@@ -83,65 +83,63 @@
 
 
 # Use global: size, sizeX, sizeY 
-function maze_to_json(maze,    json) {
+function maze_to_json(maze ) {
 
-   old_delim = FS
-   FS=" "
-
-   template = "{\"params\":{\"width\":\"%d\",\"heigth\":\"%d\"},\"area\": [%s]}"
+   template = "{\"params\":{\"width\":\"%d\",\"height\":\"%d\"},\"area\": [%s]}"
    area = maze[0]
-   for ( i = 1; i < size; i++)
-      area = area RT "," RT maze[i]
+   for ( i = 1; i < size; i++)  
+      area = area ","  maze[i]
    json = sprintf( template, sizeX, sizeY, area )
-
-   FS = old_delim
-
+   
    return json
 }
 
 #Use global: amountUser
-function content_to_json(mods, users, UID,   json) {
- 
-   old_delim = FS
-   FS = " "
+function content_to_json(mods, users, UID ) {
+
 
    template_user = "{\"user\":{\"ID\":%d,\"health\":%d,\"pos\":%d},"
-   template_items = "\"mobs\":{\"traps\":{\"pos\":[%s]},\"heals\":{\"pos\":[%s]},"
-   
-   template_others = "\"players\":{\"pos\":[%s]}"
+   template_mobs = "\"mobs\":{\"traps\":{\"pos\":[%s]},\"heals\":{\"pos\":[%s]},"
+   template_players = "\"players\":{\"pos\":[%s]}"
 
-   for( i = 0; i < amountUser; i++){
+   jplayers = ""
+   juser = ""
+   jtraps = ""
+   jheals = ""
+   
+   for( i = 0; i < amountUsers; i++){
       if( i == UID) {
-         user = sprintf(template_user, i, users[i][1], users[i][0])
+         juser = sprintf(template_user, i, users[i][1], users[i][0])
       }
       else {
-         players = users[i][0] RT "," players         
+         jplayers = users[i][0] "," jplayers         
       }
    }
-   gsub(/,$/,"", players); 
+   gsub(/,$/,"", jplayers); 
 
    # This condition correspond to the error:
    # either user's port is incocrrect or my algorithm failed. 
-   if( user == "" ) {
-      user = sprintf( template_user, -1, -1, -1)
+   if( juser == "" ) {
+      juser = sprintf( template_user, -1, -1, -1)
    }
    # If there is only one user at the time.
-   if( players == "") {
-      players = sprintf(template_others, -1)
+   if( jplayers == "") {
+      jplayers = sprintf(template_players, -1)
+   }
+   else {
+      jplayers = sprintf( template_players, jplayers)
    }
    
    for( i = 0; i < amountFruits; i++ )
-      heals = mods[i] RT "," heals 
-   gsub(/,$/,"",heals)
-   for( i = amountFruit; i < amountTraps+amountFruits; i++)
-      traps = mods[i] RT ","traps
-   gsub(/,$/,"",traps)
+      jheals = mods[i] "," jheals 
+   gsub(/,$/,"",jheals)
+   for( i = amountFruits; i < amountTraps+amountFruits; i++)
+      jtraps = mods[i] ","jtraps
+   gsub(/,$/,"",jtraps)
 
-   mobs    = sprintf( template_items, traps, heals)
-   players = sprintf( template_others, players)
-   result  = user RT mobs RT players RT "}"
+   jmobs    = sprintf( template_mobs, jtraps, jheals)
+   result  = juser  jmobs  jplayers "}"
 
-   FS = old_delim
    return result
 }
 
@@ -149,7 +147,7 @@ function content_to_json(mods, users, UID,   json) {
 function init_to_json( UID, users, maze, mods,     json){
    template_init = "{\"maze\":\"%s\",\"content\":\"%s\"}"
    maze_json = maze_to_json( maze )
-   content_json = content_to_json(mods, users, UID)
+   content_json = content_to_json(mods, users, UID) "}"
    gsub(/"/, "\\\"", content_json );
    gsub(/"/, "\\\"", maze_json );
    return sprintf(template_init, maze_json, content_json )

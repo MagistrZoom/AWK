@@ -12,19 +12,17 @@ var session;
 //============ Begin of network space    =================
 function load_page() {
    try {
-      setTimeout(
       sendInit( function() {
          var init = JSON.parse(this);                               
-         console.log(init);
          var maze = JSON.parse(init.maze);
          var content = JSON.parse(init.content);
          session = new SessionProperties( content.user.ID, maze );
          initFrames( content ); 
-      }), 500 ); 
+      }); 
       
    }
    catch( err ) {
-      printErrorPage( err.message );
+      printErrorPage( err.message + "  in load_page()");
    }
 }; 
 
@@ -47,9 +45,8 @@ function getXmlHttp(){
 
 function sendInit( callback ) {
    var req = getXmlHttp(); 
-   req.onreadychange = function() {
+   req.onreadystatechange = function() {
       if( req.readyState == 4 ){
-         console.log( req.responseText);
          callback.call( req.responseText );
       }
    };
@@ -64,7 +61,7 @@ function sendMove( move ) {
    };
    req.open( 'POST', true);
    req.setRequestHeader( "Content-type", "application/json");
-   req.send('/move:' + move + session.user.ID + '\r\n\r\n');
+   req.send('/move:' + move + " " +session.UID + '\r\n\r\n');
 
 }
 
@@ -74,7 +71,7 @@ function getState( ) {
    req.onreadychange = function() {
       
    };
-   req.open( 'GET', '/ajax_get/get_statement:'+ session.user.ID, true);
+   req.open( 'GET', '/ajax_get/get_statement:'+ session.UID, true);
 }
 
 //============ End of network space =================
@@ -89,7 +86,7 @@ function initFrames( content ) {
       addEvents();
    }
    catch( err ){
-      printErrorPage( "Cannot load the page" );
+      printErrorPage( err.message + " in initFrames()");
    }
 }
 
@@ -99,7 +96,7 @@ function changePageState( content ) {
       pageBody( session.maze, content );
    }
    catch( err ) {
-      printErrorPage( "Cannot update the page" );
+      printErrorPage( err.message + " in changePageState" );
    }
 }
 
@@ -115,7 +112,7 @@ function pageHeader( user ) {
   var newHTML  = str.replace(/@/, userName );
   newHTML = newHTML.replace(/\+/, function(match){ 
          var hp= ""; 
-         for( i = 0, HP =  user.health; i < HP ; i++ ) 
+         for( i = 0, HP =  user.health/2; i < HP ; i++ ) 
                hp += "o";      
          return hp;
   });
@@ -148,7 +145,8 @@ function pageBody( maze, content ) {
       height      = maze.params.height,
       user        = content.user.pos, // scalar  
 
-      area_array  = maze.area;
+      area_array  = maze.area,
+      mobs        = content.mobs;
    
 
   var wb, we, hb, he,
@@ -247,6 +245,7 @@ function addEvents() {
        }
        sendMove( move, function() { 
          var content = JSON.parse(this);
+         console.log( content );
          changePageState( content );
        });
    });
