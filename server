@@ -63,7 +63,7 @@ END {
 function make_a_headers(content_length,    headers){
 	ORS = "\r\n"
 	headers = "HTTP/1.1 200 OK" ORS
-	headers = headers "Server: gawk-based sh~ made by izoomko" ORS
+	headers = headers "Server: gawk-based sh~ made by izoomko, rehmaar and berserk" ORS
 	headers = headers "Content-length:" content_length ORS
 	headers = headers "Connection: keep-alive"
 	return headers
