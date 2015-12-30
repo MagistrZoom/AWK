@@ -35,13 +35,13 @@ users[id][] -- array of each user's parameters.
   users[id][1] - HP   
 
 ###AJAX GET requests
-init
+init.db
 
-get_statement:UID
+get_statement:UID.db
   UID - integer
 
 ###AJAX POST Requests
-move:DIRECTION_UID
+move:DIRECTION_UID.db
   DIRECTION: 0 to 3 NESW
   UID: integer
 =======

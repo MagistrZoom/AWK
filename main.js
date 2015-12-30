@@ -61,7 +61,7 @@ function sendMove( move ) {
    };
    req.open( 'POST', true);
    req.setRequestHeader( "Content-type", "application/json");
-   req.send('/move:' + move + "_" +session.UID + '\r\n\r\n');
+   req.send('/move:' + move + "_" +session.UID +".db" +'\r\n\r\n');
 
 }
 
