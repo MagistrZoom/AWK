@@ -1,2 +1,10 @@
-# AWK
-Aw lyl, dat shit is working
+# KAG 
+Online browser game
+
+Authors
+-------
+Maria ReMaar Kuklina
+Dmitriy Aituganov
+Vladimir iZoomko Gubarev
+
+2015
