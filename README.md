@@ -3,7 +3,7 @@ Online browser game
 
 Authors
 -------
-Maria ReMaar Kuklina  
+Maria RehMaar Kuklina  
 Dmitriy Aituganov  
 Vladimir iZoomko Gubarev  
   
