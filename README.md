@@ -1,6 +1,8 @@
 # KAG 
 Online browser game
 
+Lang: Gnu AWK + JS
+
 Authors
 -------
 Maria RehMaar Kuklina  
